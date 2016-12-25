@@ -18,13 +18,12 @@ USAGE:
 
 1. Copy irc text. Lines should be formatted like 
 
-<Username> Comments are here
+"<Username> Comments are here"
 
 or
 
-* Username does a thing
+"* Username does a thing"
 
-(github formatting messes these up open this file in text editor to see)
 
 2.  Run generateComic.py
 
