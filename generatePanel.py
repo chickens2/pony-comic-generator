@@ -1,6 +1,7 @@
 from PIL import Image,ImageFont,ImageDraw
 import findEmote
 import random
+import praw
 fontsize=13
 lineHeight=13
 #charsInLine=22

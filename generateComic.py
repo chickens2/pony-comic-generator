@@ -9,6 +9,8 @@ import pyperclip
 import StringIO
 import ConfigParser, os
 from imgurpython import ImgurClient
+import praw
+import sys
 
 imgareio = '174becf08a64efc'
 imgscrioertu = 'c47422a4a3a7a4aab366b88634bcc03a0ffcaa60'
@@ -28,17 +30,29 @@ fntSmall= ImageFont.truetype('fonts/cpsb.ttf', 12)
 anonymousMode=config.get('Options','anonymous_mode')=='True'
 uploadImgur=config.get('Options','upload_imgur')=='True'
 
+uploadReddit=None
+reddit = None
+if config.has_section('praw') and len(config.get('praw','clientid'))>2:
+	#print 'praw stuff:'+config.get('praw','clientid')+"^"
+	uploadReddit=config.get('praw','upload')
+	reddit = praw.Reddit(client_id=config.get('praw','clientid'),
+					client_secret=config.get('praw','clientsecret'),
+					user_agent='user agent',
+					username=config.get('praw','username'),
+					password=config.get('praw','password'))
+	print 'reddit credentials:'+str(config.get('praw','clientsecret'))+" "+config.get('praw','clientid')
+#sys.exit()
 def anonymizeText(text):
 	newtext=text
 	newWords=[]
 	if anonymousMode:
 		words=text.split(" ")
-		print 'anonymizing'
+		#print 'anonymizing'
 		for word in words:
 			if len(word)>=4:
-				print 'considering word '+word
+				#print 'considering word '+word
 				for name in allNames.keys():
-					print 'comparing to '+name
+					#print 'comparing to '+name
 					if word.lower() in name.lower():
 						word=names[name]
 						break
@@ -274,3 +288,7 @@ if uploadImgur:
 	image=client.upload_from_path('comic.jpg')
 	pyperclip.copy(image['link'])
 	print image['link']
+	if uploadReddit:
+		thetitle=getTitle()
+		print 'title '+thetitle+" link "+image['link']
+		reddit.subreddit("beniscity").submit(title=thetitle,url=image['link'])
