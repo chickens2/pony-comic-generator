@@ -11,17 +11,23 @@ import ConfigParser, os
 from imgurpython import ImgurClient
 import praw
 import sys
+import urllib
 
 imgareio = '174becf08a64efc'
 imgscrioertu = 'c47422a4a3a7a4aab366b88634bcc03a0ffcaa60'
 client = ImgurClient(imgareio, imgscrioertu)
+
+urllib.urlretrieve('https://raw.githubusercontent.com/chickens2/pony-comic-generator/master/DEFAULT_ALIAS_DO_NOT_EDIT.cfg','DEFAULT_ALIAS_DO_NOT_EDIT.cfg')
+config2 = ConfigParser.ConfigParser()
+config2.readfp(open('DEFAULT_ALIAS_DO_NOT_EDIT.cfg'))
+allNames=dict(config2.items('Aliases'))
 
 config = ConfigParser.ConfigParser()
 config.readfp(open('config.cfg'))
 
 allText=""
 lines=[]
-allNames=dict(config.items('Aliases'))
+allNames.update(dict(config.items('Aliases'))) #add aliases from config.cfg, overwrite defaults
 names={}
 selectedBackground=None
 fntLarge = ImageFont.truetype('fonts/cpsb.ttf', 25)
