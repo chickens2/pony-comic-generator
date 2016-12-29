@@ -13,11 +13,27 @@ import praw
 import sys
 import urllib
 
+#direct print output to log file
+class Logger(object):
+    def __init__(self):
+        self.terminal = sys.stdout
+        self.log = open("log.txt", "w")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)  
+
+sys.stdout = Logger()
+
+
 imgareio = '174becf08a64efc'
 imgscrioertu = 'c47422a4a3a7a4aab366b88634bcc03a0ffcaa60'
 client = ImgurClient(imgareio, imgscrioertu)
 
-urllib.urlretrieve('https://raw.githubusercontent.com/chickens2/pony-comic-generator/master/DEFAULT_ALIAS_DO_NOT_EDIT.cfg','DEFAULT_ALIAS_DO_NOT_EDIT.cfg')
+try:
+	urllib.urlretrieve('https://raw.githubusercontent.com/chickens2/pony-comic-generator/master/DEFAULT_ALIAS_DO_NOT_EDIT.cfg','DEFAULT_ALIAS_DO_NOT_EDIT.cfg')
+except:
+	print 'could not retrieve default alias list, using local version'
 config2 = ConfigParser.ConfigParser()
 config2.readfp(open('DEFAULT_ALIAS_DO_NOT_EDIT.cfg'))
 allNames=dict(config2.items('Aliases'))
@@ -294,7 +310,7 @@ def processChatLog(file):
 
 	
 
-clipboard=pyperclip.paste()
+clipboard=pyperclip.paste().encode('utf8')
 print 'clipboard is: \n'+str(clipboard)
 processChatLog(StringIO.StringIO(clipboard))#open('exampleChat12.txt','r'))
 if uploadImgur:
