@@ -179,14 +179,17 @@ def selectBackground(seed):
 def processChatLog(file):
 	global selectedBackground
 	global lines
+	global allNames
+	print 'original allnames:'
+	pprint(allNames)
 	text=""
 	mostInARow=1
 	currentName=None
 	currentInARow=1
 	nameOrder=[]
 	for line in file:
-		if 'Raribot' in line or '> ~' in line:
-			continue
+		#if 'Raribot' in line or '> ~' in line:
+		#	continue
 		line=line.strip()
 		line=line.strip('\n')
 		text+=line
@@ -197,15 +200,17 @@ def processChatLog(file):
 			print 'new line '+line
 		if line.count('<')<1 or line.count('>')<1:
 			continue
-		name=findBetween(line,'<','>')
+		name=findBetween(line,'<','>').lower()
 		if name not in nameOrder:
 			nameOrder.append(name)
 		pony=None
 		if name not in allNames:
+			print 'name '+str(name)+' not in allnames'
 			pony=findEmote.getProceduralPony(name)
 			names[name]=pony
 			allNames[name]=pony
 		else:
+			print 'name '+str(name)+' was in allnames'
 			names[name]=allNames[name]
 			pony=names[name]
 		print 'name: '+name
@@ -221,6 +226,8 @@ def processChatLog(file):
 			currentInARow=1
 		currentName=name
 	#this is a bad hack probably but idk how else to do it without adding a million extra parameters everywhere
+	print 'the final names list: '
+	pprint(names)
 	generatePanel.names=names
 	print 'most in a row: '+str(mostInARow)
 	for line in lines:

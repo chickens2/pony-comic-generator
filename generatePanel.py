@@ -92,8 +92,10 @@ def getBackgroundImage(backgroundName,closeup=False):
 def getCharacterImage(name1,dialog1,transpose,imheight=None):
 	im=None
 	if name1 in names:
+		print 'getting image from manual list for '+str(name1)+" "+names[name1]
 		im=findEmote.getRandomEmote(dialog1,names[name1])
 	else:
+		print 'getting image from procedural for '+str(name1)
 		im=findEmote.getProceduralEmote(name1,dialog1)#Image.open("flair.png").convert('RGBA')
 	im.thumbnail(characterMaxSize)
 	#print 'gci imheight '+str(imheight)
