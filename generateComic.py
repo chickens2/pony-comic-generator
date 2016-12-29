@@ -12,6 +12,8 @@ from imgurpython import ImgurClient
 import praw
 import sys
 import urllib
+import os
+
 
 #direct print output to log file
 class Logger(object):
