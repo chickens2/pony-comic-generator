@@ -23,6 +23,8 @@ for fn in os.listdir('emotes'):
 				if 'amazonaws' in value['Emotes']['']['Image']:
 					del data[key]
 					continue
+			else:
+				del data[key]
 			if 'Offset' in value['Emotes']['']:
 				offset=value['Emotes']['']['Offset']
 				if offset[0]>0 or offset[1]>0:
