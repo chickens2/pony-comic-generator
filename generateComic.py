@@ -23,12 +23,12 @@ specifiedBackground=None
 nextToFill=None
 for arg in sys.argv:
 	if arg[0]=='-':
-		nextToFill=arg[1]
+		nextToFill=arg[1:].lower()
 	else:
 		if nextToFill is not None:
-			if nextToFill=='f':
+			if nextToFill[0]=='f':
 				textFileChat=arg
-			if nextToFill=='b':
+			if nextToFill[0]=='b':
 				specifiedBackground=arg
 		nextToFill=None
 print 'chat from log: '+str(textFileChat)
@@ -64,6 +64,12 @@ config.readfp(open('config.cfg'))
 allText=""
 lines=[]
 allNames.update(dict(config.items('Aliases'))) #add aliases from config.cfg, overwrite defaults
+allNames2={}
+for key in allNames.keys():
+	allNames2[key.lower()]=allNames[key].lower()
+allNames=allNames2
+print 'final alias list: '
+pprint(allNames)
 names={}
 selectedBackground=None
 fntLarge = ImageFont.truetype(config.get('Fonts','title_font'),int(config.get('Fonts','title_size'))) #used for the title
