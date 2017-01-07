@@ -18,6 +18,8 @@ N.B. If typing `python` or `pip` in the command line gives an error even after i
 
 The comic should now be the new `comic.jpg` and should also be uploaded to Imgur.  The Imgur link replaces the text in your clipboard.
 
+When run from the command line you can specify a file containing irc text instead with -f, and specify the background image file to use with -b.
+
 ## Technical Notes
 
 * Images in the backgrounds folder really don't need to be any larger than 500px in any dimension.  Install `ImageMagick` and use `convert <imagename> -resize "500^>" <newname>` to scale the images down a bit.
