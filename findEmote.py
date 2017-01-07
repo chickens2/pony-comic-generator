@@ -4,6 +4,7 @@ import os
 import random
 import urllib
 from PIL import Image,ImageFont,ImageDraw
+import cacher
 
 MIN_LENGTH=4 #minimum number of emotes for a tag to be valid
 emotesByName={}
@@ -75,8 +76,10 @@ def getEmote(emoteName):
 	print url
 	if 'http:' not in url:
 		url='http:'+url
-	urllib.urlretrieve(url,'temp.png')
-	fullImage=Image.open("temp.png").convert('RGBA')
+	imgloc=cacher.getUrlFile(url)
+	fullImage=Image.open(imgloc).convert('RGBA')
+	#urllib.urlretrieve(url,'temp.png')
+	#fullImage=Image.open("temp.png").convert('RGBA')
 	print offset
 	print size
 	
