@@ -14,6 +14,24 @@ import sys
 import urllib
 import os
 import json
+import getopt
+
+
+#command line options
+textFileChat=None
+specifiedBackground=None
+nextToFill=None
+for arg in sys.argv:
+	if arg[0]=='-':
+		nextToFill=arg[1]
+	else:
+		if nextToFill is not None:
+			if nextToFill=='f':
+				textFileChat=arg
+			if nextToFill=='b':
+				specifiedBackground=arg
+		nextToFill=None
+print 'chat from log: '+str(textFileChat)
 
 #direct print output to log file
 class Logger(object):
@@ -203,7 +221,11 @@ def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 	return panel
 def selectBackground(seed):
 	random.seed(seed)
-	return 'backgrounds/'+random.choice(os.listdir('backgrounds'))
+	#specifiedBackground
+	result='backgrounds/'+random.choice(os.listdir('backgrounds'))
+	if specifiedBackground is not None:
+		result='backgrounds/'+specifiedBackground
+	return result
 def processChatLog(file):
 	global selectedBackground
 	global lines
@@ -319,11 +341,14 @@ def processChatLog(file):
 	#img.show()
 	img.save("comic.jpg","JPEG")
 
-
-
-clipboard=pyperclip.paste().encode('utf8')
-print 'clipboard is: \n'+str(clipboard)
-processChatLog(StringIO.StringIO(clipboard))#open('exampleChat12.txt','r'))
+chatfile=None
+if textFileChat is None:
+	clipboard=pyperclip.paste().encode('utf8')
+	print 'clipboard is: \n'+str(clipboard)
+	chatfile=StringIO.StringIO(clipboard)
+else:
+	chatfile=open(textFileChat).readlines()
+processChatLog(chatfile)#open('exampleChat12.txt','r'))
 if uploadImgur:
 	image=client.upload_from_path('comic.jpg')
 	pyperclip.copy(image['link'])
