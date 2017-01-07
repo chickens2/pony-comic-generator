@@ -224,7 +224,7 @@ def selectBackground(seed):
 	#specifiedBackground
 	result='backgrounds/'+random.choice(os.listdir('backgrounds'))
 	if specifiedBackground is not None:
-		result='backgrounds/'+specifiedBackground
+		result=specifiedBackground
 	return result
 def processChatLog(file):
 	global selectedBackground
