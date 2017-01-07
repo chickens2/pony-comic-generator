@@ -13,7 +13,7 @@ import praw
 import sys
 import urllib
 import os
-
+import json
 
 #direct print output to log file
 class Logger(object):
@@ -65,7 +65,7 @@ if config.has_section('praw') and len(config.get('praw','clientid'))>2:
 					username=config.get('praw','username'),
 					password=config.get('praw','password'))
 	print 'reddit credentials:'+str(config.get('praw','clientsecret'))+" "+config.get('praw','clientid')
-#sys.exit()
+
 def anonymizeText(text):
 	newtext=text
 	newWords=[]
@@ -208,6 +208,7 @@ def processChatLog(file):
 	global selectedBackground
 	global lines
 	global allNames
+	#findEmote.defaultSeed="".join(file)
 	print 'original allnames:'
 	pprint(allNames)
 	text=""
@@ -253,6 +254,7 @@ def processChatLog(file):
 		else:
 			currentInARow=1
 		currentName=name
+	findEmote.defaultSeed=text
 	#this is a bad hack probably but idk how else to do it without adding a million extra parameters everywhere
 	print 'the final names list: '
 	pprint(names)

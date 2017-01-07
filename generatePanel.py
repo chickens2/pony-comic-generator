@@ -111,6 +111,10 @@ def getCharacterImage(name1,dialog1,transpose,imheight=None):
 	#print 'gci imheight '+str(imheight)
 	if imheight is None:
 		imheight=charHeight#3*panelSize[1]/8
+	imheightold=imheight
+	if im.size[0]>imheight:
+		imheight=imheight*(im.size[0]/im.size[1])
+		print 'too long resizing image '+str(charHeight)+" "+str(imheightold)
 	im=im.resize((int(imheight*(float(im.size[0])/im.size[1])),int(imheight)))
 	if transpose:
 		im=im.transpose(Image.FLIP_LEFT_RIGHT)
@@ -141,17 +145,18 @@ def hasRoomForDialogue2(dialog1,dialog2):
 spaceFromEdge=[5,5]
 def getBubbleLength():
 	return 2*panelSize[0]/3
+#doesnt zoom in on characters when closeup to help them fit
 def draw3CharactersAndBackground(name1,name2,name3,dialog1,dialog2,dialog3,backgroundName,closeup=True):
 	bg=getBackgroundImage(backgroundName,closeup)
 	im=None
-	heightUsed=charHeight/closeupMultiplier
-	if closeup:
-		heightUsed=charHeightCloseup
+	heightUsed=int(charHeight/closeupMultiplier)
+	#if closeup and charHeightCloseup is not None:
+	#	heightUsed=charHeightCloseup
 	im=getCharacterImage(name1,dialog1,True,heightUsed)
 	posx=5
 	posy=panelSize[1]-im.size[1]
 	if closeup:
-		posy=panelSize[1]-charHeight#
+		posy=panelSize[1]-heightUsed#int(heightUsed/closeupMultiplier)#charHeight#
 	box=(posx,posy,posx+im.size[0],posy+im.size[1])
 	bg.paste(im,box,mask=im)
 
