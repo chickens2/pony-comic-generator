@@ -5,3 +5,7 @@ comic.jpg
 temp.png
 temp.jpg
 log.txt
+.trashes
+.DS_Store
+*.trashes
+*.DS_Store

@@ -1,8 +1,8 @@
 from PIL import Image,ImageFont,ImageDraw
+from resizeimage import resizeimage
 import findEmote
-import random
+import random, ConfigParser
 import praw
-fontsize=13
 lineHeight=13
 #charsInLine=22
 fontPixelWidth=10
@@ -11,9 +11,14 @@ charHeight=None
 closeupMultiplier=1.3
 charHeightCloseup=None#charHeight*closeupMultiplier
 names={}#should mirror generatecomic name dictionary
-fnt = ImageFont.truetype('fonts/cpsb.ttf', fontsize)
+
 def circle(draw, center, radius):
     draw.ellipse((center[0] - radius + 1, center[1] - radius + 1, center[0] + radius - 1, center[1] + radius - 1), fill=(255,255,255), outline=None)
+
+config = ConfigParser.ConfigParser()
+config.readfp(open('config.cfg'))
+
+fnt = ImageFont.truetype(config.get('Fonts','talk_font'), config.getint('Fonts','talk_size'))
 
 boxBorder=(15,9)
 
@@ -55,7 +60,7 @@ def drawText(image,text,box,arroworientation,color=None):
 	dbox=Image.open("dialoguebubble.png")
 	dbox=dbox.resize((box[2],boxHeight))
 	image.paste(dbox,(box[0],box[1]),mask=dbox)
-	
+
 	#draw arrow
 	arrow=Image.open("bubblearrow.png")
 	arrowXMod=None
@@ -69,7 +74,7 @@ def drawText(image,text,box,arroworientation,color=None):
 		#arrow=arrow.transpose(Image.FLIP_LEFT_RIGHT)
 	print arrowXMod
 	print box[2]
-	
+
 	try:
 		arrowpos=(box[0]+arrowXMod,box[1]+boxHeight-5)
 		arrow=arrow.resize((arrow.size[0],panelSize[1]-charHeight-arrowpos[1]))
@@ -78,14 +83,19 @@ def drawText(image,text,box,arroworientation,color=None):
 		print 'failed to draw text arrow'
 	d.text((box[0]+boxBorder[0],box[1]+boxBorder[1]), text, font=fnt, fill=color)
 	return boxHeight
-	
+
 characterMaxSize=(panelSize[0]/2,panelSize[0]/2)
 def getBackgroundImage(backgroundName,closeup=False):
 	bg=Image.open(backgroundName).convert('RGBA')
+	stretch=config.get('Options','squish_image').upper()=='TRUE'
 	if closeup:
 		distance=int((closeupMultiplier*bg.size[0]-bg.size[0])/2)
 		bg=bg.crop((distance,distance*2,bg.size[0]-distance,bg.size[1]))
-	bg=bg.resize(panelSize)
+		bg=bg.resize([bg.size[0]*2,bg.size[1]*2])
+	if stretch:
+		bg=bg.resize(panelSize)
+	else:
+		bg=resizeimage.resize_cover(bg,panelSize,validate=False)
 	filter=Image.new('RGBA',bg.size,color=(255,255,255,128))
 	bg=Image.composite(bg,filter,filter)
 	return bg
@@ -144,19 +154,19 @@ def draw3CharactersAndBackground(name1,name2,name3,dialog1,dialog2,dialog3,backg
 		posy=panelSize[1]-charHeight#
 	box=(posx,posy,posx+im.size[0],posy+im.size[1])
 	bg.paste(im,box,mask=im)
-	
+
 	im2=getCharacterImage(name2,dialog2,False,heightUsed)
 	posx=panelSize[0]-5-im2.size[0]
 	#posy=panelSize[1]-im2.size[1]
 	box=(posx,posy,posx+im2.size[0],posy+im2.size[1])
 	bg.paste(im2,box,mask=im2)
-	
+
 	im3=getCharacterImage(name3,dialog3,False,heightUsed)
 	posx=panelSize[0]/2-im2.size[0]/2
 	#posy=panelSize[1]-im2.size[1]
 	box=(posx,posy,posx+im3.size[0],posy+im3.size[1])
 	bg.paste(im3,box,mask=im3)
-	
+
 	return bg
 def draw2CharactersAndBackground(name1,name2,dialog1,dialog2,backgroundName,closeup=True):
 	bg=getBackgroundImage(backgroundName,closeup)
@@ -171,8 +181,8 @@ def draw2CharactersAndBackground(name1,name2,dialog1,dialog2,backgroundName,clos
 		posy=panelSize[1]-charHeight#
 	box=(posx,posy,posx+im.size[0],posy+im.size[1])
 	bg.paste(im,box,mask=im)
-	
-	
+
+
 	im2=getCharacterImage(name2,dialog2,False,heightUsed)
 	posx=panelSize[0]-25-im2.size[0]
 	#posy=panelSize[1]-im2.size[1]
@@ -245,6 +255,7 @@ def drawPanelNoDialogue(names,backgroundName,seed,iscloseup=False):
 		return drawBorder(draw2CharactersAndBackground(names[0],names[1],names[0]+seed,names[1]+seed,backgroundName,iscloseup))
 	if len(names)==3:
 		return drawBorder(draw3CharactersAndBackground(names[0],names[1],names[2],names[0]+seed,names[1]+seed,names[2]+seed,backgroundName,iscloseup))
+	return drawBorder(getBackgroundImage(backgroundName,False))
 #drawPanel1("someone3","someoneelse","i invited darqwolff why did that happen","smaller text whaat does it look like","backgrounds/puffBg.jpg")
 #drawPanel1Character("eoitruroi","tfw plounge has a discord","backgrounds/puffBg.jpg",iscloseup=True)
 # bg=drawPanel3Characters("someobne3","somewoneelse","person3","so it fits like fuck","i invitted darqwolff","smallerrr text ","backgrounds/puffBg.jpg",textOrder=0,iscloseup=False)
