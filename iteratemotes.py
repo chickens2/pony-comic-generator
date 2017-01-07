@@ -10,7 +10,7 @@ from pprint import pprint
 import pyperclip
 import findEmote
 
-NUM_SELECTIONS_EACH_IMAGE=3
+NUM_SELECTIONS_EACH_IMAGE=2
 customTags={}
 tagsByImage={}
 imageByTags={}
