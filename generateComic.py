@@ -23,7 +23,7 @@ class Logger(object):
 
     def write(self, message):
         self.terminal.write(message)
-        self.log.write(message)  
+        self.log.write(message)
 
 sys.stdout = Logger()
 
@@ -48,11 +48,11 @@ lines=[]
 allNames.update(dict(config.items('Aliases'))) #add aliases from config.cfg, overwrite defaults
 names={}
 selectedBackground=None
-fntLarge = ImageFont.truetype('fonts/cpsb.ttf', 25)
-fntMed= ImageFont.truetype('fonts/cpsb.ttf', 17)
-fntSmall= ImageFont.truetype('fonts/cpsb.ttf', 12)
-anonymousMode=config.get('Options','anonymous_mode')=='True'
-uploadImgur=config.get('Options','upload_imgur')=='True'
+fntLarge = ImageFont.truetype(config.get('Fonts','title_font'),int(config.get('Fonts','title_size'))) #used for the title
+fntSmall= ImageFont.truetype(config.get('Fonts','cast_font'),int(config.get('Fonts','cast_size'))) #used for the list of characters
+anonymousMode=config.get('Options','anonymous_mode').upper()=='TRUE'
+uploadImgur=config.get('Options','upload_imgur').upper()=='TRUE'
+castIntro=config.get('Options','cast_introduction')
 
 uploadReddit=None
 reddit = None
@@ -91,42 +91,46 @@ def findBetween(s, first, last ):
     except ValueError:
         return ""
 def drawCenteredText(startY,text,draw,fnt,panelSize):
-	
+
 	MAX_W, MAX_H = panelSize[0], panelSize[1]
-	para=textwrap.wrap(text, width=12)
-	print 'para:'
-	pprint(para)
 	current_h, pad = startY, 10
-	#draw.text((5,5),para[0],font=fnt)
-	for line in para:
-		w, h = draw.textsize(line, font=fnt)
-		draw.text(((MAX_W - w) / 2, current_h), line, font=fnt,fill=(0,0,0,255))
-		current_h += h + pad
+	if text is not None:
+		para=textwrap.wrap(text, width=12)
+		print 'para:'
+		pprint(para)
+		#draw.text((5,5),para[0],font=fnt)
+		for line in para:
+			w, h = draw.textsize(line, font=fnt)
+			draw.text(((MAX_W - w) / 2, current_h), line, font=fnt,fill=(0,0,0,255))
+			current_h += h + pad
 	return current_h
 def getTitle():
 	random.seed(allText)
 	#pprint(names)
-	line=random.choice(lines)
-	words=line['text'].split(" ")
-	if len(words)>5:
-		words=words[-5:]
-	title=None
-	while len(words)>2 and random.random()>0.4:
-		print words[0]
-		del words[0]
-		#print 'words:'
-		#pprint(words)
-	title=" ".join(words).title()
-	#title=textwrap.wrap(title, width=15)
-	print 'title '+str(title)
-	return title
+	if len(lines)==0:
+		line=""
+	else:
+		line=random.choice(lines)
+		words=line['text'].split(" ")
+		if len(words)>5:
+			words=words[-5:]
+		title=None
+		while len(words)>2 and random.random()>0.4:
+			print words[0]
+			del words[0]
+			#print 'words:'
+			#pprint(words)
+		title=" ".join(words).title()
+		#title=textwrap.wrap(title, width=15)
+		print 'title '+str(title)
+		return title
 def createTitlePanel(panelSize):
 	title=getTitle()
 	img = Image.new("RGBA", panelSize, (255,255,255))
 	d = ImageDraw.Draw(img)
 	newh=drawCenteredText(25,title,d,fntLarge,panelSize)
 	newh+=17
-	d.text((15,newh), "With:", font=fntSmall, fill=(0,0,0,255))
+	d.text((15,newh), castIntro, font=fntSmall, fill=(0,0,0,255))
 	newh+=15
 	for key,value in names.iteritems():
 		text=value
@@ -158,7 +162,7 @@ def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 	random.seed(str(txtLines))
 	dialogueChoice=random.choice(dialogueOptions)
 	panel=None
-	
+
 	currentNames=[]
 	print 'prevnames to start '+str(dialogueChoice)+" "+str(range(dialogueChoice))
 	pprint(prevNames)
@@ -240,8 +244,8 @@ def processChatLog(file):
 		print 'name: '+name
 		line=line[line.index('>')+2:]
 		lines.append({"pony":pony,"name":name,"text":line})
-		
-		
+
+
 		if name==currentName:
 			currentInARow+=1
 			if currentInARow>mostInARow:
@@ -252,6 +256,7 @@ def processChatLog(file):
 	#this is a bad hack probably but idk how else to do it without adding a million extra parameters everywhere
 	print 'the final names list: '
 	pprint(names)
+	print 'Empty names? '+str(names=={})
 	generatePanel.names=names
 	print 'most in a row: '+str(mostInARow)
 	for line in lines:
@@ -281,15 +286,17 @@ def processChatLog(file):
 	panelsAcross=2
 	if smallPanels:
 		panelsAcross=3
+	if names=={}: #if there's no valid text
+		panels.append(generatePanel.drawPanelNoDialogue({},selectedBackground,text+str(len(panels))))
 	#if it needs an establishing shot with no dialogue
-	if len(panels)%panelsAcross!=0:
+	if len(panels)%panelsAcross!=0 or names=={}:
 		panels.insert(1,generatePanel.drawPanelNoDialogue(nameOrder[:min(3,len(nameOrder))],selectedBackground,text+str(len(panels))))
 	else: #otherwise redo the first panel as zoomed out
 		txtLines2=list(lines)
 		del panels[1]
 		panels.insert(1,createNextPanel(txtLines2,panelSize,smallPanels,nameOrder,closeup=False))
 	#if there still aren't enough panels, pad the end
-	while len(panels)%panelsAcross!=0:
+	while len(panels)%panelsAcross!=0 and names!={}:
 		panels.append(generatePanel.drawPanelNoDialogue(prevNames,selectedBackground,text+str(len(panels))))
 	maxWidth=panelSize[0]*panelsAcross
 	currentHeight=0
@@ -310,7 +317,7 @@ def processChatLog(file):
 	#img.show()
 	img.save("comic.jpg","JPEG")
 
-	
+
 
 clipboard=pyperclip.paste().encode('utf8')
 print 'clipboard is: \n'+str(clipboard)
