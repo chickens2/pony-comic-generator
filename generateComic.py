@@ -15,7 +15,7 @@ import urllib
 import os
 import json
 import getopt
-
+from getch import getch
 
 #command line options
 textFileChat=None
@@ -77,6 +77,7 @@ fntSmall= ImageFont.truetype(config.get('Fonts','cast_font'),int(config.get('Fon
 anonymousMode=config.get('Options','anonymous_mode').upper()=='TRUE'
 uploadImgur=config.get('Options','upload_imgur').upper()=='TRUE'
 castIntro=config.get('Options','cast_introduction')
+repeatMode=config.get('Options','repeat_mode').upper()=='TRUE'
 
 uploadReddit=None
 reddit = None
@@ -350,19 +351,26 @@ def processChatLog(file):
 	#img.show()
 	img.save("comic.jpg","JPEG")
 
-chatfile=None
-if textFileChat is None:
-	clipboard=pyperclip.paste().encode('utf8')
-	print 'clipboard is: \n'+str(clipboard)
-	chatfile=StringIO.StringIO(clipboard)
-else:
-	chatfile=open(textFileChat).readlines()
-processChatLog(chatfile)#open('exampleChat12.txt','r'))
-if uploadImgur:
-	image=client.upload_from_path('comic.jpg')
-	pyperclip.copy(image['link'])
-	print image['link']
-	if uploadReddit:
-		thetitle=getTitle()
-		print 'title '+thetitle+" link "+image['link']
-		reddit.subreddit("beniscity").submit(title=thetitle,url=image['link'])
+while True:
+	chatfile=None
+	if textFileChat is None:
+		clipboard=pyperclip.paste().encode('utf8')
+		print 'clipboard is: \n'+str(clipboard)
+		chatfile=StringIO.StringIO(clipboard)
+	else:
+		chatfile=open(textFileChat).readlines()
+	processChatLog(chatfile)#open('exampleChat12.txt','r'))
+	if uploadImgur:
+		image=client.upload_from_path('comic.jpg')
+		pyperclip.copy(image['link'])
+		print image['link']
+		if uploadReddit:
+			thetitle=getTitle()
+			print 'title '+thetitle+" link "+image['link']
+			reddit.subreddit("beniscity").submit(title=thetitle,url=image['link'])
+	# if repeatMode:
+		# print 'generate another comic (y/n)?'
+		# g=getch()()
+		# if not g=='y':
+			# break
+	break

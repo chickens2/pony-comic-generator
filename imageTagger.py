@@ -20,7 +20,7 @@ for emote in emotes:
 	if iteratemotes.totalSelectionsMade>0 and iteratemotes.totalSelectionsMade%(5*iteratemotes.NUM_SELECTIONS_EACH_IMAGE)==0:
 		print 'do you want to save (y/n):'
 		while True:
-			charused=getch()
+			charused=getch()()
 			if charused=='y':
 				iteratemotes.saveData()
 				break
