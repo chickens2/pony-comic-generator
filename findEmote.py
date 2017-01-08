@@ -11,7 +11,7 @@ MIN_LENGTH=4 #minimum number of emotes for a tag to be valid
 emotesByName={}
 emotesByPony={}
 BANNED_TAGS=[
-'v',]
+'v','ocpony']
 emoteMetadata={}
 for file in os.listdir('tagAssignments'):
 	#print 'tagassignments file:'+file
