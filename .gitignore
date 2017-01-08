@@ -11,3 +11,4 @@ log.txt
 *.DS_Store
 *.tmp
 *.swp
+cachedData/*
