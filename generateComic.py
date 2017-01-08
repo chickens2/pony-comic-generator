@@ -4,7 +4,7 @@ from pprint import pprint
 import generatePanel
 import findEmote
 import textwrap
-import os, re
+import re
 import pyperclip
 import StringIO
 import ConfigParser
@@ -12,7 +12,26 @@ from imgurpython import ImgurClient
 import praw
 import sys
 import urllib
+import os
+import json
+import getopt
 
+
+#command line options
+textFileChat=None
+specifiedBackground=None
+nextToFill=None
+for arg in sys.argv:
+	if arg[0]=='-':
+		nextToFill=arg[1:].lower()
+	else:
+		if nextToFill is not None:
+			if nextToFill[0]=='f':
+				textFileChat=arg
+			if nextToFill[0]=='b':
+				specifiedBackground=arg
+		nextToFill=None
+print 'chat from log: '+str(textFileChat)
 
 #direct print output to log file
 class Logger(object):
@@ -45,6 +64,12 @@ config.readfp(open('config.cfg'))
 allText=""
 lines=[]
 allNames.update(dict(config.items('Aliases'))) #add aliases from config.cfg, overwrite defaults
+allNames2={}
+for key in allNames.keys():
+	allNames2[key.lower()]=allNames[key].lower()
+allNames=allNames2
+print 'final alias list: '
+pprint(allNames)
 names={}
 selectedBackground=None
 fntLarge = ImageFont.truetype(config.get('Fonts','title_font'),int(config.get('Fonts','title_size'))) #used for the title
@@ -64,7 +89,7 @@ if config.has_section('praw') and len(config.get('praw','clientid'))>2:
 					username=config.get('praw','username'),
 					password=config.get('praw','password'))
 	print 'reddit credentials:'+str(config.get('praw','clientsecret'))+" "+config.get('praw','clientid')
-#sys.exit()
+
 def anonymizeText(text):
 	newtext=text
 	newWords=[]
@@ -205,11 +230,16 @@ def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 	return panel
 def selectBackground(seed):
 	random.seed(seed)
-	return 'backgrounds/'+random.choice(os.listdir('backgrounds'))
+	#specifiedBackground
+	result='backgrounds/'+random.choice(os.listdir('backgrounds'))
+	if specifiedBackground is not None:
+		result=specifiedBackground
+	return result
 def processChatLog(file):
 	global selectedBackground
 	global lines
 	global allNames
+	#findEmote.defaultSeed="".join(file)
 	print 'original allnames:'
 	pprint(allNames)
 	text=""
@@ -255,6 +285,7 @@ def processChatLog(file):
 		else:
 			currentInARow=1
 		currentName=name
+	findEmote.defaultSeed=text
 	#this is a bad hack probably but idk how else to do it without adding a million extra parameters everywhere
 	print 'the final names list: '
 	pprint(names)
@@ -319,11 +350,14 @@ def processChatLog(file):
 	#img.show()
 	img.save("comic.jpg","JPEG")
 
-
-
-clipboard=pyperclip.paste().encode('utf8')
-print 'clipboard is: \n'+str(clipboard)
-processChatLog(StringIO.StringIO(clipboard))#open('exampleChat12.txt','r'))
+chatfile=None
+if textFileChat is None:
+	clipboard=pyperclip.paste().encode('utf8')
+	print 'clipboard is: \n'+str(clipboard)
+	chatfile=StringIO.StringIO(clipboard)
+else:
+	chatfile=open(textFileChat).readlines()
+processChatLog(chatfile)#open('exampleChat12.txt','r'))
 if uploadImgur:
 	image=client.upload_from_path('comic.jpg')
 	pyperclip.copy(image['link'])

@@ -4,12 +4,20 @@ import os
 import random
 import urllib
 from PIL import Image,ImageFont,ImageDraw
+import cacher
 
+defaultSeed="RANDOM_XD"
 MIN_LENGTH=4 #minimum number of emotes for a tag to be valid
 emotesByName={}
 emotesByPony={}
 BANNED_TAGS=[
-'v',]
+'v','ocpony']
+emoteMetadata={}
+for file in os.listdir('tagAssignments'):
+	#print 'tagassignments file:'+file
+	with open('tagAssignments/'+file) as data_file:    
+		data = json.load(data_file)
+		emoteMetadata.update(data)
 for fn in os.listdir('emotes'):
 	data=None
 	with open('emotes/'+fn) as data_file:    
@@ -70,26 +78,38 @@ def getEmote(emoteName):
 	#if offset[0]<0 or offset[1]<1:
 	#	return None
 	size=data['Emotes']['']['Size']
-	print emoteName
+	print 'emotename: '+emoteName
 	pprint(data)
 	print url
 	if 'http:' not in url:
 		url='http:'+url
-	urllib.urlretrieve(url,'temp.png')
-	fullImage=Image.open("temp.png").convert('RGBA')
+	imgloc=cacher.getUrlFile(url)
+	fullImage=Image.open(imgloc).convert('RGBA')
+	#urllib.urlretrieve(url,'temp.png')
+	#fullImage=Image.open("temp.png").convert('RGBA')
 	print offset
 	print size
-	
-	return fullImage.crop((offset[0],offset[1],offset[0]+size[0],offset[1]+size[1]))
+	fullImage=fullImage.crop((offset[0],offset[1],offset[0]+size[0],offset[1]+size[1]))
+	if emoteName in emoteMetadata:
+		data=emoteMetadata[emoteName]
+		if 'right' in data:
+			print 'findemote flipping image'
+			fullImage=fullImage.transpose(Image.FLIP_LEFT_RIGHT)
+	return fullImage
 def getRandomEmote(seed,pony=None):
+	global defaultSeed
+	if len(seed)<1:
+		seed=defaultSeed
 	if pony is None:
 		pony=random.choice(emotesByPony.keys())
 	print pony
 	emote=None
 	emoteNames=list(emotesByPony[pony])
 	#while emote is None and len(emoteNames)>0:
+	print 'randomly choosing emote from list of '+str(len(emoteNames))+" with seed "+str(seed)
 	random.seed(seed)
 	emoteName=random.choice(emoteNames)
+	print 'selected emote: '+emoteName
 	random.seed()
 	emote=getEmote(emoteName)
 		#emoteNames.remove(emote)
