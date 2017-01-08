@@ -3,12 +3,9 @@ from resizeimage import resizeimage
 import findEmote
 import random, ConfigParser
 import praw
-lineHeight=13
 #charsInLine=22
-fontPixelWidth=10
 panelSize=(200,200)
 charHeight=None
-closeupMultiplier=1.3
 charHeightCloseup=None#charHeight*closeupMultiplier
 names={}#should mirror generatecomic name dictionary
 
@@ -19,6 +16,9 @@ config = ConfigParser.ConfigParser()
 config.readfp(open('config.cfg'))
 
 fnt = ImageFont.truetype(config.get('Fonts','talk_font'), config.getint('Fonts','talk_size'))
+lineHeight = config.getint('Fonts','talk_height')
+fontPixelWidth = config.getint('Fonts','talk_charwidth')
+closeupMultiplier = config.getfloat('Options','closeup_zoom')
 
 boxBorder=(15,9)
 

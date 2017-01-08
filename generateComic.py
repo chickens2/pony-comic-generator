@@ -4,10 +4,10 @@ from pprint import pprint
 import generatePanel
 import findEmote
 import textwrap
-import os
+import re
 import pyperclip
 import StringIO
-import ConfigParser, os
+import ConfigParser
 from imgurpython import ImgurClient
 import praw
 import sys
@@ -94,16 +94,19 @@ def anonymizeText(text):
 	newtext=text
 	newWords=[]
 	if anonymousMode:
-		words=text.split(" ")
+		words=text.split(" ") # can't regex here or else it adds too many spaces around punctuation
 		#print 'anonymizing'
 		for word in words:
 			if len(word)>=4:
+				parts=re.findall(r"\w+|[^\w\s]", word, re.UNICODE) # handle 's and names @end of sentences
+				word=""
 				#print 'considering word '+word
-				for name in allNames.keys():
-					#print 'comparing to '+name
-					if word.lower() in name.lower():
-						word=names[name]
-						break
+				for part in parts:
+					#print 'word part '+part
+					if allNames.get(part.lower(),None) is not None:
+						#print "removing a name "+part
+						part=allNames[part][1:] # [1:] to get rid of the + in dialogue
+					word+=part
 			newWords.append(word)
 		newtext=" ".join(newWords)
 	return newtext

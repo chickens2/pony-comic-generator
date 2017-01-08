@@ -22,7 +22,7 @@ When run from the command line you can specify a file containing irc text instea
 
 ## Technical Notes
 
-* Images in the backgrounds folder really don't need to be any larger than 500px in any dimension.  Install `ImageMagick` and use `convert <imagename> -resize "500^>" <newname>` to scale the images down a bit.
+* Images in the backgrounds folder really don't need to be any larger than 500px in any dimension.  Install `ImageMagick` and use `convert <imagename> -resize "500^>" <newname>` to scale the images down a bit.  Further optimisation may be used with the `jpegoptim` and `optipng` commands.
 * The program currently completely chokes up if there are any non-image entities in the backgrounds folder.  This means:
 	1. Mac users need to make sure there aren't any `.DS_Store` or `.trashes` files there.  Use `rm backgrounds/.DS_Store` if you receive complaints about that file.
 	2. You can't put subfolders in the backgrounds directory or else the program poops its pants. 💩
