@@ -9,3 +9,5 @@ log.txt
 .DS_Store
 *.trashes
 *.DS_Store
+*.tmp
+*.swp
