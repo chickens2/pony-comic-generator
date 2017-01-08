@@ -3,6 +3,7 @@ import msvcrt
 import sys
 import findEmote
 from PIL import Image,ImageFont,ImageDraw
+from getch import getch
 daynum=31
 print 'enter emote tag: '
 tag=raw_input()
@@ -19,7 +20,7 @@ for emote in emotes:
 	if iteratemotes.totalSelectionsMade>0 and iteratemotes.totalSelectionsMade%(5*iteratemotes.NUM_SELECTIONS_EACH_IMAGE)==0:
 		print 'do you want to save (y/n):'
 		while True:
-			charused=msvcrt.getch()
+			charused=getch()
 			if charused=='y':
 				iteratemotes.saveData()
 				break
