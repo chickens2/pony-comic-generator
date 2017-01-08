@@ -5,22 +5,25 @@ import random
 import urllib
 from PIL import Image,ImageFont,ImageDraw
 import cacher
+import ConfigParser
 
-defaultSeed="RANDOM_XD"
-MIN_LENGTH=4 #minimum number of emotes for a tag to be valid
+config = ConfigParser.ConfigParser()
+config.readfp(open('config.cfg'))
+
+defaultSeed=config.get('Options','default_seed') #RAND0m_XD or something or whatever
+MIN_LENGTH=config.getint('Options','emotional_diversity') #minimum number of emotes for a tag to be valid
 emotesByName={}
 emotesByPony={}
-BANNED_TAGS=[
-'v','ocpony']
+BANNED_TAGS=config.get('Options','banned_tags').split()
 emoteMetadata={}
 for file in os.listdir('tagAssignments'):
 	#print 'tagassignments file:'+file
-	with open('tagAssignments/'+file) as data_file:    
+	with open('tagAssignments/'+file) as data_file:
 		data = json.load(data_file)
 		emoteMetadata.update(data)
 for fn in os.listdir('emotes'):
 	data=None
-	with open('emotes/'+fn) as data_file:    
+	with open('emotes/'+fn) as data_file:
 		data = json.load(data_file)
 		for key in data.keys():
 			value=data[key]
@@ -43,7 +46,7 @@ for fn in os.listdir('emotes'):
 	emotesByName.update(data)
 for fn in os.listdir('tags'):
 	data=None
-	with open('tags/'+fn) as data_file:    
+	with open('tags/'+fn) as data_file:
 		data = json.load(data_file)
 	for key, value in data.iteritems():
 		if key in emotesByName and len(value)==1:
