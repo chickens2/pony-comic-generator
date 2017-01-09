@@ -1,3 +1,8 @@
+# coding=UTF-8
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+# vim: set fileencoding=UTF-8 :
+
 import json
 from pprint import pprint
 import os
@@ -16,7 +21,7 @@ defaultSeed=config.get('Options','default_seed') #RAND0m_XD or something or what
 MIN_LENGTH=config.getint('Options','emotional_diversity') #minimum number of emotes for a tag to be valid
 emotesByName={}
 emotesByPony={}
-BANNED_TAGS=config.get('Options','banned_tags').split()
+BANNED_TAGS=config.get('Ignore','banned_tags').split()
 emoteMetadata={}
 for file in os.listdir('tagAssignments'):
 	#print 'tagassignments file:'+file
