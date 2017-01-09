@@ -1,1 +1,1 @@
-{"perspective": ["close", "far"], "orientation": ["left", "right"], "category:top": ["orientation", "perspective", "emotion"]}
+{"orientation": ["left", "right"], "perspective_inactive": ["close", "far", "waytooclose"], "category:top": ["orientation", "perspective", "emotion"]}
