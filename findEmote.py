@@ -10,6 +10,8 @@ import ConfigParser
 config = ConfigParser.ConfigParser()
 config.readfp(open('config.cfg'))
 
+
+#
 defaultSeed=config.get('Options','default_seed') #RAND0m_XD or something or whatever
 MIN_LENGTH=config.getint('Options','emotional_diversity') #minimum number of emotes for a tag to be valid
 emotesByName={}
@@ -63,13 +65,18 @@ for key in emotesByPony.keys():
 		del emotesByPony[key]
 	#pprint(emotesByPony)
 
+#
 def getProceduralPony(seed):
 	random.seed(seed)
 	pony=random.choice(emotesByPony.keys())
 	random.seed()
 	return pony
+
+#
 def getProceduralEmote(seed1,seed2):
 	return getRandomEmote(seed2,getProceduralPony(seed1))
+
+#
 def getEmote(emoteName):
 	data=emotesByName[emoteName]
 	url=data['Emotes']['']['Image']
@@ -99,6 +106,8 @@ def getEmote(emoteName):
 			print 'findemote flipping image'
 			fullImage=fullImage.transpose(Image.FLIP_LEFT_RIGHT)
 	return fullImage
+
+#
 def getRandomEmote(seed,pony=None):
 	global defaultSeed
 	if len(seed)<1:
@@ -117,5 +126,8 @@ def getRandomEmote(seed,pony=None):
 	emote=getEmote(emoteName)
 		#emoteNames.remove(emote)
 	return emote
+
+# Other code
+
 #image=getProceduralEmote("pondy")
 #image.show()
