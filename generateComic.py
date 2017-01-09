@@ -1,3 +1,8 @@
+# coding=UTF-8
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+# vim: set fileencoding=UTF-8 :
+
 from PIL import Image,ImageFont,ImageDraw
 import random
 from pprint import pprint
@@ -90,6 +95,7 @@ if config.has_section('praw') and len(config.get('praw','clientid'))>2:
 					password=config.get('praw','password'))
 	print 'reddit credentials:'+str(config.get('praw','clientsecret'))+" "+config.get('praw','clientid')
 
+#
 def anonymizeText(text):
 	newtext=text
 	newWords=[]
@@ -110,6 +116,8 @@ def anonymizeText(text):
 			newWords.append(word)
 		newtext=" ".join(newWords)
 	return newtext
+
+#
 def findBetween(s, first, last ):
     try:
         start = s.index( first ) + len( first )
@@ -117,6 +125,8 @@ def findBetween(s, first, last ):
         return s[start:end]
     except ValueError:
         return ""
+
+#
 def drawCenteredText(startY,text,draw,fnt,panelSize):
 
 	MAX_W, MAX_H = panelSize[0], panelSize[1]
@@ -131,8 +141,11 @@ def drawCenteredText(startY,text,draw,fnt,panelSize):
 			draw.text(((MAX_W - w) / 2, current_h), line, font=fnt,fill=(0,0,0,255))
 			current_h += h + pad
 	return current_h
+
+#
 def getTitle():
 	random.seed(allText)
+	title=None
 	#pprint(names)
 	if len(lines)==0:
 		line=""
@@ -141,7 +154,6 @@ def getTitle():
 		words=line['text'].split(" ")
 		if len(words)>5:
 			words=words[-5:]
-		title=None
 		while len(words)>2 and random.random()>0.4:
 			print words[0]
 			del words[0]
@@ -150,7 +162,9 @@ def getTitle():
 		title=" ".join(words).title()
 		#title=textwrap.wrap(title, width=15)
 		print 'title '+str(title)
-		return title
+	return title
+
+#
 def createTitlePanel(panelSize):
 	title=getTitle()
 	img = Image.new("RGBA", panelSize, (255,255,255))
@@ -167,6 +181,8 @@ def createTitlePanel(panelSize):
 		newh+=15
 	generatePanel.drawBorder(img)
 	return img#img.show()
+
+#
 def isCorrectOrder(txtLine1,txtLine2,nameorder):
 	print 'comparing nameorder '+str(nameorder)+" "+txtLine2['name']
 	for name in nameorder:
@@ -176,6 +192,8 @@ def isCorrectOrder(txtLine1,txtLine2,nameorder):
 			return True
 	return True
 prevNames=[]
+
+#
 def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 	global prevNames
 	dialogueOptions=[0]
@@ -228,17 +246,25 @@ def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 	prevNames=currentNames
 	print 'returning panel '+str(panel)+" "+str(dialogueChoice)
 	return panel
+
+# selects which background image to use
 def selectBackground(seed):
 	random.seed(seed)
-	#specifiedBackground
-	result='backgrounds/'+random.choice(os.listdir('backgrounds'))
-	if specifiedBackground is not None:
-		result=specifiedBackground
-	return result
+	#specifiedBackground #stub for future use
+	if specifiedBackground is not None: # let command-line switches specify a background
+		return specifiedBackground
+	BAD_FILES=config.get('Ignore','banned_backgrounds').split()
+	result=None
+	while result is None or result in BAD_FILES: # make sure that you don't pick a hidden system file by accident
+		result=random.choice(os.listdir('backgrounds'))
+	return 'backgrounds/'+result
+
+# processes the chat log for comic generation
 def processChatLog(file):
 	global selectedBackground
 	global lines
 	global allNames
+	generatePanel.genTransformDict()
 	#findEmote.defaultSeed="".join(file)
 	print 'original allnames:'
 	pprint(allNames)
@@ -349,6 +375,7 @@ def processChatLog(file):
 			currentHeight+=panel.size[1]
 	#img.show()
 	img.save("comic.jpg","JPEG")
+
 
 chatfile=None
 if textFileChat is None:

@@ -202,8 +202,8 @@ def getBackgroundImage(backgroundName,closeup=False):
 			hY=bg.size[1]
 			bigWidth=int(wX*closeupMultiplier)
 			bigHeight=int(hY*closeupMultiplier)
-			offX=int(random.randint(-wX,wX)/closeupMultiplier)/4
-			offY=int(random.randint(-hY,hY)/closeupMultiplier)/4
+			offX=int(triangularInt(-wX,wX,0)/closeupMultiplier)/4
+			offY=int(triangularInt(-hY,hY,0)/closeupMultiplier)/4
 
 			left=(bigWidth-wX)/2+offX
 			top=(bigHeight-hY)/2+offY
@@ -220,9 +220,9 @@ def getBackgroundImage(backgroundName,closeup=False):
 		bg=undoTransformList(messup,bg)
 	return bg
 
-#
-def getSequence():
-	return
+# This could be replaced with a Gaussian distribution with hard limits slapped on
+def triangularInt(low,high,mode):
+	return int(random.triangular(low,high,mode))
 
 #
 def getCharacterImage(name1,dialog1,transpose,imheight=None):
