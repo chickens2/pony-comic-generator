@@ -30,3 +30,7 @@ The comic should now be the new `comic.jpg` and should also be uploaded to Imgur
 	* `1`: users without a defined pony will have their pony procedurally-chosen based a seed other than their username
 	* `2`: all users receive a procedurally-chosen pony
 * `closeup_zoom` affects both the characters and the background
+
+## [Future Plans](./roadmap.md)
+
+See [`roadmap.md`](./roadmap.md)
