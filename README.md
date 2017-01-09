@@ -18,7 +18,7 @@ N.B. If typing `python` or `pip` in the command line gives an error even after i
 
 The comic should now be the new `comic.jpg` and should also be uploaded to Imgur.  The Imgur link replaces the text in your clipboard.
 
-When run from the command line you can specify a file containing irc text instead with -f, and specify the background image file to use with -b.
+When run from the command line you can specify a file containing irc text instead with -f, specify the title with -t, and specify the background image file to use with -b.
 
 ## Technical Notes
 
