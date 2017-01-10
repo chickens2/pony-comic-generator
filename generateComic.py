@@ -312,6 +312,7 @@ def processChatLog(file):
 			currentInARow=1
 		currentName=name
 	findEmote.defaultSeed=text
+
 	#this is a bad hack probably but idk how else to do it without adding a million extra parameters everywhere
 	print 'the final names list: '
 	pprint(names)
@@ -347,6 +348,7 @@ def processChatLog(file):
 		panelsAcross=3
 	if names=={}: #if there's no valid text
 		panels.append(generatePanel.drawPanelNoDialogue({},selectedBackground,text+str(len(panels))))
+
 	#if it needs an establishing shot with no dialogue
 	if len(panels)%panelsAcross!=0 or names=={}:
 		panels.insert(1,generatePanel.drawPanelNoDialogue(nameOrder[:min(3,len(nameOrder))],selectedBackground,text+str(len(panels))))
@@ -354,9 +356,11 @@ def processChatLog(file):
 		txtLines2=list(lines)
 		del panels[1]
 		panels.insert(1,createNextPanel(txtLines2,panelSize,smallPanels,nameOrder,closeup=False))
+
 	#if there still aren't enough panels, pad the end
 	while len(panels)%panelsAcross!=0 and names!={}:
 		panels.append(generatePanel.drawPanelNoDialogue(prevNames,selectedBackground,text+str(len(panels))))
+
 	maxWidth=panelSize[0]*panelsAcross
 	currentHeight=0
 	currentWidth=0
@@ -366,6 +370,7 @@ def processChatLog(file):
 	print 'panels:'
 	pprint(panels)
 	for panel in panels:
+		panel=generatePanel.possiblyTransform(panel,95) # testing flipped panels
 		box=(currentWidth,currentHeight,currentWidth+panel.size[0],panel.size[1]+currentHeight)
 		print 'making panel at: '+str(box)
 		img.paste(panel,box)
@@ -374,6 +379,7 @@ def processChatLog(file):
 			currentWidth=0
 			currentHeight+=panel.size[1]
 	#img.show()
+	img=generatePanel.possiblyTransform(img,64)
 	img.save("comic.jpg","JPEG")
 
 

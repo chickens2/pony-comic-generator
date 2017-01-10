@@ -131,6 +131,13 @@ def applyTransformList(list,image):
 			image=image.transpose(transformation)
 	return image
 
+# Possibly transforms an image
+def possiblyTransform(image,odds,length=2):
+	if rollOdds(odds):
+		return applyTransformList(getTransformList(length),image)
+	else:
+		return image
+
 # does the opposite transpositions as applyTranformList
 # if these two functions are called immediately after one another, the original image should be returned
 # have to go in reverse order for it to work consistently
@@ -197,9 +204,15 @@ def getBackgroundImage(backgroundName,closeup=False):
 			bg=bg.crop((distance,distance*2,bg.size[0]-distance,bg.size[1]))
 		bg=bg.resize(panelSize)
 	else:
+		wX=bg.size[0]
+		hY=bg.size[1]
+		if wX<panelSize[0] or hY<panelSize[1]:
+			resize_constant=2  # 2 is arbitrary, but I don't think we'll be likely to encounter smaller images
+			wX=wX*resize_constant
+			hY=hY*resize_constant
+			bg=bg.resize([wX,hY])
+
 		if closeup:
-			wX=bg.size[0]
-			hY=bg.size[1]
 			bigWidth=int(wX*closeupMultiplier)
 			bigHeight=int(hY*closeupMultiplier)
 			offX=int(triangularInt(-wX,wX,0)/closeupMultiplier)/4
