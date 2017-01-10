@@ -396,6 +396,7 @@ if textFileChat is None:
 	chatfile=StringIO.StringIO(clipboard)
 else:
 	chatfile=open(textFileChat).readlines()
+random.seed(chatfile) # may not be strictly necessary, but we want a guaranteed procedural seed in here somewhere
 processChatLog(chatfile)#open('exampleChat12.txt','r'))
 if uploadImgur:
 	image=client.upload_from_path('comic.jpg')

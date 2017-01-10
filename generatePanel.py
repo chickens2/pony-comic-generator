@@ -144,7 +144,8 @@ def possiblyTransform(image,odds,length=2):
 def undoTransformList(list,image):
 	undoList=[]
 	for transformation in list:
-		undoList.insert(0,undoTransform_D[transformation])
+		if transformation is not None:
+			undoList.insert(0,undoTransform_D[transformation])
 	return applyTransformList(undoList,image)
 
 # picks which transformation will be applied to the image
