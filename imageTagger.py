@@ -1,5 +1,5 @@
 import iteratemotes
-import msvcrt
+#import msvcrt
 import sys
 import findEmote
 from PIL import Image,ImageFont,ImageDraw
