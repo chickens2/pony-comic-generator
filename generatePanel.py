@@ -230,7 +230,7 @@ def getBackgroundImage(backgroundName,closeup=False):
 
 	filter=Image.new('RGBA',bg.size,color=(255,255,255,128))
 	bg=Image.composite(bg,filter,filter)
-	if not rollOdds(95):
+	if not rollOdds(420): #1/420 odds of a transformed background gives around a 1.18% chance that any given comic contains a transformed panel background
 		bg=undoTransformList(messup,bg)
 	return bg
 
