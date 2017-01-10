@@ -12,3 +12,4 @@ log.txt
 *.tmp
 *.swp
 cachedData/*
+testLogs/*
