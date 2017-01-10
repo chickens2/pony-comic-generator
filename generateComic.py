@@ -261,9 +261,22 @@ def selectBackground(seed):
 		return specifiedBackground
 	BAD_FILES=config.get('Ignore','banned_backgrounds').split()
 	result=None
-	while result is None or result in BAD_FILES: # make sure that you don't pick a hidden system file by accident
-		result=random.choice(os.listdir('backgrounds'))
-	return 'backgrounds/'+result
+	#while result is None or os.path.isdir(result): # make sure that you don't pick a hidden system file by accident
+	return pickBackgroundFile('backgrounds',BAD_FILES) #random.choice(os.listdir('backgrounds'))
+	#return result
+
+# actually goes into the files
+# this might choke up if it encounters a directory only containing invalid files
+def pickBackgroundFile(directory,bad_files):
+	file=None
+	while file is None or file in bad_files:
+		file=random.choice(os.listdir(directory))
+	#file=directory+file # use the full path name
+	print "Trying file "+file+" to use as the background"
+	if os.path.isdir(os.path.join(directory,file))==True:
+		return pickBackgroundFile(directory+"/"+file,bad_files)
+	else:
+		return directory+"/"+file
 
 # processes the chat log for comic generation
 def processChatLog(file):
