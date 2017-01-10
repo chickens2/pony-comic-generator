@@ -2,16 +2,14 @@
 
 ### Publiq
 
-##### Backgrounds PR (in progress)
-
-* Add chance for flipped or rotated images✅, panels, or comics
-* Add new backgrounds (as a test)
-* Add options to assign ponies to users based on a different seed than their username
-
 ##### Next
 
 * LimeChat→input converter
 * tagging improvements
+	* More options for tagging
+	* Tag fonts & bg as well? (or at least set up the plumbing for it)
+	* Support folders for backgrounds
+* Actually add all the new backgrounds (I've got a bunch and want to add the folder support so they don't drown out the current pool)
 
 ##### Font PR (later)
 
