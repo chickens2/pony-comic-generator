@@ -1,3 +1,8 @@
+# coding=UTF-8
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+# vim: set fileencoding=UTF-8 :
+
 from PIL import Image,ImageFont,ImageDraw
 import random
 from pprint import pprint
@@ -94,6 +99,7 @@ if config.has_section('praw') and len(config.get('praw','clientid'))>2:
 					password=config.get('praw','password'))
 	print 'reddit credentials:'+str(config.get('praw','clientsecret'))+" "+config.get('praw','clientid')
 
+#
 def anonymizeText(text):
 	newtext=text
 	newWords=[]
@@ -114,6 +120,8 @@ def anonymizeText(text):
 			newWords.append(word)
 		newtext=" ".join(newWords)
 	return newtext
+
+#
 def findBetween(s, first, last ):
     try:
         start = s.index( first ) + len( first )
@@ -121,6 +129,8 @@ def findBetween(s, first, last ):
         return s[start:end]
     except ValueError:
         return ""
+
+#
 def drawCenteredText(startY,text,draw,fnt,panelSize):
 
 	MAX_W, MAX_H = panelSize[0], panelSize[1]
@@ -135,10 +145,13 @@ def drawCenteredText(startY,text,draw,fnt,panelSize):
 			draw.text(((MAX_W - w) / 2, current_h), line, font=fnt,fill=(0,0,0,255))
 			current_h += h + pad
 	return current_h
+
+#
 def getTitle():
 	if specifiedTitle is not None:
 		return specifiedTitle
 	random.seed(allText)
+	title=None
 	#pprint(names)
 	if len(lines)==0:
 		line=""
@@ -147,7 +160,6 @@ def getTitle():
 		words=line['text'].split(" ")
 		if len(words)>5:
 			words=words[-5:]
-		title=None
 		while len(words)>2 and random.random()>0.4:
 			print words[0]
 			del words[0]
@@ -156,7 +168,9 @@ def getTitle():
 		title=" ".join(words).title()
 		#title=textwrap.wrap(title, width=15)
 		print 'title '+str(title)
-		return title
+	return title
+
+#
 def createTitlePanel(panelSize):
 	title=getTitle()
 	img = Image.new("RGBA", panelSize, (255,255,255))
@@ -173,6 +187,8 @@ def createTitlePanel(panelSize):
 		newh+=15
 	generatePanel.drawBorder(img)
 	return img#img.show()
+
+#
 def isCorrectOrder(txtLine1,txtLine2,nameorder):
 	print 'comparing nameorder '+str(nameorder)+" "+txtLine2['name']
 	for name in nameorder:
@@ -182,6 +198,8 @@ def isCorrectOrder(txtLine1,txtLine2,nameorder):
 			return True
 	return True
 prevNames=[]
+
+#
 def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 	global prevNames
 	dialogueOptions=[0]
@@ -234,17 +252,25 @@ def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 	prevNames=currentNames
 	print 'returning panel '+str(panel)+" "+str(dialogueChoice)
 	return panel
+
+# selects which background image to use
 def selectBackground(seed):
 	random.seed(seed)
-	#specifiedBackground
-	result='backgrounds/'+random.choice(os.listdir('backgrounds'))
-	if specifiedBackground is not None:
-		result=specifiedBackground
-	return result
+	#specifiedBackground #stub for future use
+	if specifiedBackground is not None: # let command-line switches specify a background
+		return specifiedBackground
+	BAD_FILES=config.get('Ignore','banned_backgrounds').split()
+	result=None
+	while result is None or result in BAD_FILES: # make sure that you don't pick a hidden system file by accident
+		result=random.choice(os.listdir('backgrounds'))
+	return 'backgrounds/'+result
+
+# processes the chat log for comic generation
 def processChatLog(file):
 	global selectedBackground
 	global lines
 	global allNames
+	generatePanel.genTransformDict()
 	#findEmote.defaultSeed="".join(file)
 	print 'original allnames:'
 	pprint(allNames)
@@ -292,6 +318,7 @@ def processChatLog(file):
 			currentInARow=1
 		currentName=name
 	findEmote.defaultSeed=text
+
 	#this is a bad hack probably but idk how else to do it without adding a million extra parameters everywhere
 	print 'the final names list: '
 	pprint(names)
@@ -327,6 +354,7 @@ def processChatLog(file):
 		panelsAcross=3
 	if names=={}: #if there's no valid text
 		panels.append(generatePanel.drawPanelNoDialogue({},selectedBackground,text+str(len(panels))))
+
 	#if it needs an establishing shot with no dialogue
 	if len(panels)%panelsAcross!=0 or names=={}:
 		panels.insert(1,generatePanel.drawPanelNoDialogue(nameOrder[:min(3,len(nameOrder))],selectedBackground,text+str(len(panels))))
@@ -334,9 +362,11 @@ def processChatLog(file):
 		txtLines2=list(lines)
 		del panels[1]
 		panels.insert(1,createNextPanel(txtLines2,panelSize,smallPanels,nameOrder,closeup=False))
+
 	#if there still aren't enough panels, pad the end
 	while len(panels)%panelsAcross!=0 and names!={}:
 		panels.append(generatePanel.drawPanelNoDialogue(prevNames,selectedBackground,text+str(len(panels))))
+
 	maxWidth=panelSize[0]*panelsAcross
 	currentHeight=0
 	currentWidth=0
@@ -346,6 +376,7 @@ def processChatLog(file):
 	print 'panels:'
 	pprint(panels)
 	for panel in panels:
+		panel=generatePanel.possiblyTransform(panel,95) # testing flipped panels
 		box=(currentWidth,currentHeight,currentWidth+panel.size[0],panel.size[1]+currentHeight)
 		print 'making panel at: '+str(box)
 		img.paste(panel,box)
@@ -354,7 +385,9 @@ def processChatLog(file):
 			currentWidth=0
 			currentHeight+=panel.size[1]
 	#img.show()
+	img=generatePanel.possiblyTransform(img,64)
 	img.save("comic.jpg","JPEG")
+
 
 chatfile=None
 if textFileChat is None:

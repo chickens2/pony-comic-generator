@@ -1,3 +1,8 @@
+# coding=UTF-8
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+# vim: set fileencoding=UTF-8 :
+
 from PIL import Image,ImageFont,ImageDraw
 from resizeimage import resizeimage
 import findEmote
@@ -9,6 +14,7 @@ charHeight=None
 charHeightCloseup=None#charHeight*closeupMultiplier
 names={}#should mirror generatecomic name dictionary
 
+# draw a circle
 def circle(draw, center, radius):
     draw.ellipse((center[0] - radius + 1, center[1] - radius + 1, center[0] + radius - 1, center[1] + radius - 1), fill=(255,255,255), outline=None)
 
@@ -21,7 +27,9 @@ fontPixelWidth = config.getint('Fonts','talk_charwidth')
 closeupMultiplier = config.getfloat('Options','closeup_zoom')
 
 boxBorder=(15,9)
+characterMaxSize=(panelSize[0]/2,panelSize[0]/2)
 
+#
 def setPanelSize(ps):
 	global panelSize
 	global charHeight
@@ -29,6 +37,8 @@ def setPanelSize(ps):
 	charHeight=3*panelSize[1]/7
 	charHeightCloseup=charHeight*closeupMultiplier
 setPanelSize(panelSize)
+
+#
 def insertLineBreaks(text,maxCharsPerLine):
 	words=text.split(" ")
 	newstr=""
@@ -43,7 +53,8 @@ def insertLineBreaks(text,maxCharsPerLine):
 		newstr+=word
 	newstr=newstr.strip()
 	return newstr
-#draws text, returns how tall the box ended up being
+
+# draws text, returns how tall the box ended up being
 def drawText(image,text,box,arroworientation,color=None):
 	if color is None:
 		color=(0,0,0,255)
@@ -84,21 +95,149 @@ def drawText(image,text,box,arroworientation,color=None):
 	d.text((box[0]+boxBorder[0],box[1]+boxBorder[1]), text, font=fnt, fill=color)
 	return boxHeight
 
-characterMaxSize=(panelSize[0]/2,panelSize[0]/2)
+# does a 2-pass check through PIL's im.transform() to access all 8 possible outcomes of one rotation optionally followed by one rotation
+def imageFlip(image):
+	tr=getTransform()
+	image=image.transpose(tr)
+	tr=getTransform(20)
+	if tr is None:
+		return image
+	else:
+		return image.transpose(tr) # 2 passes for best results
+
+# rolls an n-sided die and lets you know if the result is 0
+def rollOdds(n):
+	return random.randint(0,n)==0
+
+# give a float decimal for odds
+def rollFraction(odds):
+	if odds>1:
+		return random()<(1.0/float(odds))
+	else:
+		return random()<odds
+
+# generates a list of transformations to feed to PIL's im.transform()
+# nullWeight is the relative (to the size of transform_D) likelihood that you don't do any transformation for that step
+def getTransformList(length,nullWeight=10):
+	list=[]
+	for i in (1,length):
+		list.append(getTransform(nullWeight))
+	return list
+
+# applies a list of transformations to an image
+def applyTransformList(list,image):
+	for transformation in list:
+		if transformation is not None:
+			image=image.transpose(transformation)
+	return image
+
+# Possibly transforms an image
+def possiblyTransform(image,odds,length=2):
+	if rollOdds(odds):
+		return applyTransformList(getTransformList(length),image)
+	else:
+		return image
+
+# does the opposite transpositions as applyTranformList
+# if these two functions are called immediately after one another, the original image should be returned
+# have to go in reverse order for it to work consistently
+def undoTransformList(list,image):
+	undoList=[]
+	for transformation in list:
+		undoList.insert(0,undoTransform_D[transformation])
+	return applyTransformList(undoList,image)
+
+# picks which transformation will be applied to the image
+def getTransform(allowNothing=None):
+	if allowNothing is not None:
+		maxNumber=len(transform_D.keys())+int(allowNothing)
+	else:
+		maxNumber=len(transform_D.keys())
+	x=random.randint(0,maxNumber)
+	return transform_D.get(x,None)
+
+# Generates the dicts that contain transforms that can be used with PIL's .transpose function
+# flip and rotate are relative odds as to which variety of transformation is chosen…
+# …if you're curious about the odds of *any* rotation or *any* reflection, there are 3 rotations and 2 flips
+# Using the mappings found in PIL/image.py for transformations
+def genTransformDict(flip=10,rotate=20):
+	global transform_D
+	global undoTransform_D
+	undoTransform_D={
+		0:0, #'FLIP_LEFT_RIGHT': 'FLIP_LEFT_RIGHT',
+		1:1, #'FLIP_TOP_BOTTOM': 'FLIP_TOP_BOTTOM',
+		3:3, #'ROTATE_180': 'ROTATE_180',
+		2:4, #'ROTATE_90': 'ROTATE_270',
+		4:2 #'ROTATE_270': 'ROTATE_90'
+	}
+	transform_D={}
+	x=0
+	for i in range(0,flip):
+		transform_D[i]=0 #"FLIP_LEFT_RIGHT"
+	x+=flip
+	for i in range(x,x+flip):
+		transform_D[i]=1 #"FLIP_TOP_BOTTOM"
+	x+=flip
+	for i in range(x,x+rotate):
+		transform_D[i]=2 #"ROTATE_90"
+	x+=rotate
+	for i in range(x,x+rotate):
+		transform_D[i]=3 #"ROTATE_180"
+	x+=rotate
+	for i in range(x,x+rotate):
+		transform_D[i]=4 #"ROTATE_270"
+
+# gets the background image for a panel
+# the background is chosen in selectBackground, which is called by processChatLog (both in generateComic.py)
 def getBackgroundImage(backgroundName,closeup=False):
 	bg=Image.open(backgroundName).convert('RGBA')
 	stretch=config.get('Options','squish_image').upper()=='TRUE'
-	if closeup:
-		distance=int((closeupMultiplier*bg.size[0]-bg.size[0])/2)
-		bg=bg.crop((distance,distance*2,bg.size[0]-distance,bg.size[1]))
-		bg=bg.resize([bg.size[0]*2,bg.size[1]*2])
+
+	#bg=imageFlip(bg)
+	messup=getTransformList(7,0)
+	print "Transform list "+str(messup)
+	bg=applyTransformList(messup,bg)
+
 	if stretch:
+		if closeup:
+			distance=int((closeupMultiplier*bg.size[0]-bg.size[0])/2)
+			bg=bg.crop((distance,distance*2,bg.size[0]-distance,bg.size[1]))
 		bg=bg.resize(panelSize)
 	else:
-		bg=resizeimage.resize_cover(bg,panelSize,validate=False)
+		wX=bg.size[0]
+		hY=bg.size[1]
+		if wX<panelSize[0] or hY<panelSize[1]:
+			resize_constant=2  # 2 is arbitrary, but I don't think we'll be likely to encounter smaller images
+			wX=wX*resize_constant
+			hY=hY*resize_constant
+			bg=bg.resize([wX,hY])
+
+		if closeup:
+			bigWidth=int(wX*closeupMultiplier)
+			bigHeight=int(hY*closeupMultiplier)
+			offX=int(triangularInt(-wX,wX,0)/closeupMultiplier)/4
+			offY=int(triangularInt(-hY,hY,0)/closeupMultiplier)/4
+
+			left=(bigWidth-wX)/2+offX
+			top=(bigHeight-hY)/2+offY
+			right=(bigWidth+wX)/2+offX
+			bottom=(bigHeight+hY)/2+offY
+
+			bg=bg.resize([bigWidth,bigHeight])
+			bg=bg.crop((left,top,right,bottom))
+		bg=resizeimage.resize_cover(bg,panelSize)
+
 	filter=Image.new('RGBA',bg.size,color=(255,255,255,128))
 	bg=Image.composite(bg,filter,filter)
+	if not rollOdds(95):
+		bg=undoTransformList(messup,bg)
 	return bg
+
+# This could be replaced with a Gaussian distribution with hard limits slapped on
+def triangularInt(low,high,mode):
+	return int(random.triangular(low,high,mode))
+
+#
 def getCharacterImage(name1,dialog1,transpose,imheight=None):
 	im=None
 	if name1 in names:
@@ -115,10 +254,14 @@ def getCharacterImage(name1,dialog1,transpose,imheight=None):
 	if im.size[0]>imheight:
 		imheight=imheight*(im.size[0]/im.size[1])
 		print 'too long resizing image '+str(charHeight)+" "+str(imheightold)
-	im=im.resize((int(imheight*(float(im.size[0])/im.size[1])),int(imheight)))
+	im=im.resize(( # the max functions are to handle any bugged-out emotes
+		max(int(imheight*(float(im.size[0])/im.size[1])),1),
+		max(int(imheight),1)))
 	if transpose:
 		im=im.transpose(Image.FLIP_LEFT_RIGHT)
 	return im
+
+#
 def hasRoomForDialogue3(dialog1,dialog2,dialog3):
 	lines1=insertLineBreaks(dialog1,getBubbleLength()/fontPixelWidth).count('\n')+1
 	lines2=insertLineBreaks(dialog2,getBubbleLength()/fontPixelWidth).count('\n')+1
@@ -131,6 +274,8 @@ def hasRoomForDialogue3(dialog1,dialog2,dialog3):
 		return totalLines<8
 	if panelSize[1]<401:
 		return totalLines<13
+
+#
 def hasRoomForDialogue2(dialog1,dialog2):
 	lines1=insertLineBreaks(dialog1,getBubbleLength()/fontPixelWidth).count('\n')+1
 	lines2=insertLineBreaks(dialog2,getBubbleLength()/fontPixelWidth).count('\n')+1
@@ -143,9 +288,12 @@ def hasRoomForDialogue2(dialog1,dialog2):
 	if panelSize[1]<401:
 		return totalLines<15
 spaceFromEdge=[5,5]
+
+#
 def getBubbleLength():
 	return 2*panelSize[0]/3
-#doesnt zoom in on characters when closeup to help them fit
+
+# doesn't zoom in on characters when closeup to help them fit
 def draw3CharactersAndBackground(name1,name2,name3,dialog1,dialog2,dialog3,backgroundName,closeup=True):
 	bg=getBackgroundImage(backgroundName,closeup)
 	im=None
@@ -173,6 +321,8 @@ def draw3CharactersAndBackground(name1,name2,name3,dialog1,dialog2,dialog3,backg
 	bg.paste(im3,box,mask=im3)
 
 	return bg
+
+#
 def draw2CharactersAndBackground(name1,name2,dialog1,dialog2,backgroundName,closeup=True):
 	bg=getBackgroundImage(backgroundName,closeup)
 	im=None
@@ -194,6 +344,8 @@ def draw2CharactersAndBackground(name1,name2,dialog1,dialog2,backgroundName,clos
 	box=(posx,posy,posx+im2.size[0],posy+im2.size[1])
 	bg.paste(im2,box,mask=im2)
 	return bg
+
+#
 def draw1CharacterAndBackground(name1,dialog1,backgroundName,closeup=True):
 	bg=getBackgroundImage(backgroundName,closeup)
 	heightUsed=charHeight/closeupMultiplier
@@ -207,15 +359,23 @@ def draw1CharacterAndBackground(name1,dialog1,backgroundName,closeup=True):
 	box=(posx,posy,posx+im.size[0],posy+im.size[1])
 	bg.paste(im,box,mask=im)
 	return bg
+
+#
 def drawLeftText(bg,dialog1,height,col=None):
 	bubbleLength=getBubbleLength()
 	return drawText(bg,dialog1,(spaceFromEdge[0],height,bubbleLength),0,color=col)
+
+#
 def drawRightText(bg,dialog1,height,col=None):
 	bubbleLength=getBubbleLength()
 	return drawText(bg,dialog1,(spaceFromEdge[0]+2*bubbleLength/5,height,bubbleLength),2,color=col)
+
+#
 def drawCenterText(bg,dialog1,height,col=None):
 	bubbleLength=getBubbleLength()
 	return drawText(bg,dialog1,(spaceFromEdge[0]+1*bubbleLength/6,height,int(bubbleLength*1.2)),1,color=col)
+
+#
 def drawBorder(img):
 	d = ImageDraw.Draw(img)
 	d.line((0,0, img.size[0],0), fill=(0,0,0),width=5)
@@ -223,7 +383,8 @@ def drawBorder(img):
 	d.line((0,img.size[1],img.size[0],img.size[1]), fill=(0,0,0),width=5)
 	d.line((img.size[0],img.size[1], img.size[0],0), fill=(0,0,0),width=5)
 	return img
-#2 characters both with dialogue
+
+# 2 characters both with dialogue
 def drawPanel3Characters(name1,name2,name3,dialog1,dialog2,dialog3,backgroundName,textOrder=0,iscloseup=False):
 	bg=draw3CharactersAndBackground(name1,name2,name3,dialog1,dialog2,dialog3,backgroundName,closeup=iscloseup)
 	text2height=None
@@ -236,7 +397,8 @@ def drawPanel3Characters(name1,name2,name3,dialog1,dialog2,dialog3,backgroundNam
 	drawCenterText(bg,dialog3,text2height+text1height+3*spaceFromEdge[1])
 	drawBorder(bg)
 	return bg
-#2 characters both with dialogue
+
+# 2 characters both with dialogue
 def drawPanel2Characters(name1,name2,dialog1,dialog2,backgroundName,textOrder=0,iscloseup=False):
 	bg=draw2CharactersAndBackground(name1,name2,dialog1,dialog2,backgroundName,closeup=iscloseup)
 	if textOrder==0:
@@ -247,12 +409,15 @@ def drawPanel2Characters(name1,name2,dialog1,dialog2,backgroundName,textOrder=0,
 		drawLeftText(bg,dialog2,text1height+2*spaceFromEdge[1])
 	drawBorder(bg)
 	return bg#bg.save("test.jpg","JPEG")
-#one character
+
+# one character
 def drawPanel1Character(name1,dialog1,backgroundName,iscloseup=False):
 	bg=draw1CharacterAndBackground(name1,dialog1,backgroundName,closeup=iscloseup)
 	drawCenterText(bg,dialog1,spaceFromEdge[1])
 	drawBorder(bg)
 	return bg#bg.save("test.jpg","JPEG")
+
+# empty panel
 def drawPanelNoDialogue(names,backgroundName,seed,iscloseup=False):
 	if len(names)==1:
 		return drawBorder(draw1CharacterAndBackground(names[0],names[0]+seed,backgroundName,iscloseup))
@@ -261,6 +426,11 @@ def drawPanelNoDialogue(names,backgroundName,seed,iscloseup=False):
 	if len(names)==3:
 		return drawBorder(draw3CharactersAndBackground(names[0],names[1],names[2],names[0]+seed,names[1]+seed,names[2]+seed,backgroundName,iscloseup))
 	return drawBorder(getBackgroundImage(backgroundName,False))
+
+
+
+# Old test code???
+
 #drawPanel1("someone3","someoneelse","i invited darqwolff why did that happen","smaller text whaat does it look like","backgrounds/puffBg.jpg")
 #drawPanel1Character("eoitruroi","tfw plounge has a discord","backgrounds/puffBg.jpg",iscloseup=True)
 # bg=drawPanel3Characters("someobne3","somewoneelse","person3","so it fits like fuck","i invitted darqwolff","smallerrr text ","backgrounds/puffBg.jpg",textOrder=0,iscloseup=False)

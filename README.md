@@ -14,11 +14,12 @@ N.B. If typing `python` or `pip` in the command line gives an error even after i
 ##Usage
 
 1. Copy IRC text. Lines should be formatted like `<Username> Comments are here` or `* Username does a thing`
-2.  Run `generateComic.py`
+2. Run `generateComic.py`
 
 The comic should now be the new `comic.jpg` and should also be uploaded to Imgur.  The Imgur link replaces the text in your clipboard.
 
-When run from the command line you can specify a file containing irc text instead with -f, specify the title with -t, and specify the background image file to use with -b.
+When run from the command line you can specify a file containing IRC text instead with `-f`, specify the title with `-t`, and specify the background image file to use with `-b`.
+
 
 ## Technical Notes
 
@@ -27,3 +28,12 @@ When run from the command line you can specify a file containing irc text instea
 	1. Mac users need to make sure there aren't any `.DS_Store` or `.trashes` files there.  Use `rm backgrounds/.DS_Store` if you receive complaints about that file.
 	2. You can't put subfolders in the backgrounds directory or else the program poops its pants. 💩
 * Symlinks *do* work in the backgrounds folder.  Please don't send in a PR containing symlinks.
+* Options for `shuffle_mode`:
+	* `0`: pony is procedurally-chosen from the username, except for the ones defined in the config file
+	* `1`: users without a defined pony will have their pony procedurally-chosen based a seed other than their username
+	* `2`: all users receive a procedurally-chosen pony
+* `closeup_zoom` affects both the characters and the background
+
+## [Future Plans](./roadmap.md)
+
+See [`roadmap.md`](./roadmap.md)
