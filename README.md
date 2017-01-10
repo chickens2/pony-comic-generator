@@ -14,9 +14,12 @@ N.B. If typing `python` or `pip` in the command line gives an error even after i
 ##Usage
 
 1. Copy IRC text. Lines should be formatted like `<Username> Comments are here` or `* Username does a thing`
-2.  Run `generateComic.py`
+2. Run `generateComic.py`
 
 The comic should now be the new `comic.jpg` and should also be uploaded to Imgur.  The Imgur link replaces the text in your clipboard.
+
+When run from the command line you can specify a file containing IRC text instead with `-f`, specify the title with `-t`, and specify the background image file to use with `-b`.
+
 
 ## Technical Notes
 

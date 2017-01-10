@@ -20,11 +20,12 @@ import urllib
 import os
 import json
 import getopt
-
+from getch import getch
 
 #command line options
 textFileChat=None
 specifiedBackground=None
+specifiedTitle=None
 nextToFill=None
 for arg in sys.argv:
 	if arg[0]=='-':
@@ -35,6 +36,8 @@ for arg in sys.argv:
 				textFileChat=arg
 			if nextToFill[0]=='b':
 				specifiedBackground=arg
+			if nextToFill[0]=='t':
+				specifiedTitle=arg
 		nextToFill=None
 print 'chat from log: '+str(textFileChat)
 
@@ -82,6 +85,7 @@ fntSmall= ImageFont.truetype(config.get('Fonts','cast_font'),int(config.get('Fon
 anonymousMode=config.get('Options','anonymous_mode').upper()=='TRUE'
 uploadImgur=config.get('Options','upload_imgur').upper()=='TRUE'
 castIntro=config.get('Options','cast_introduction')
+repeatMode=config.get('Options','keep_window_open').upper()=='TRUE'
 
 uploadReddit=None
 reddit = None
@@ -144,6 +148,8 @@ def drawCenteredText(startY,text,draw,fnt,panelSize):
 
 #
 def getTitle():
+	if specifiedTitle is not None:
+		return specifiedTitle
 	random.seed(allText)
 	title=None
 	#pprint(names)
@@ -399,3 +405,6 @@ if uploadImgur:
 		thetitle=getTitle()
 		print 'title '+thetitle+" link "+image['link']
 		reddit.subreddit("beniscity").submit(title=thetitle,url=image['link'])
+if repeatMode:
+	print 'press any key to continue'
+	g=getch()()
