@@ -376,7 +376,7 @@ def processChatLog(file):
 	print 'panels:'
 	pprint(panels)
 	for panel in panels:
-		panel=generatePanel.possiblyTransform(panel,95) # testing flipped panels
+		panel=generatePanel.possiblyTransform(panel,999) # testing flipped panels
 		box=(currentWidth,currentHeight,currentWidth+panel.size[0],panel.size[1]+currentHeight)
 		print 'making panel at: '+str(box)
 		img.paste(panel,box)
@@ -385,7 +385,7 @@ def processChatLog(file):
 			currentWidth=0
 			currentHeight+=panel.size[1]
 	#img.show()
-	img=generatePanel.possiblyTransform(img,64)
+	img=generatePanel.possiblyTransform(img,99)
 	img.save("comic.jpg","JPEG")
 
 
@@ -396,6 +396,7 @@ if textFileChat is None:
 	chatfile=StringIO.StringIO(clipboard)
 else:
 	chatfile=open(textFileChat).readlines()
+random.seed(chatfile) # may not be strictly necessary, but we want a guaranteed procedural seed in here somewhere
 processChatLog(chatfile)#open('exampleChat12.txt','r'))
 if uploadImgur:
 	image=client.upload_from_path('comic.jpg')
