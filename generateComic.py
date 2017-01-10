@@ -376,7 +376,7 @@ def processChatLog(file):
 	print 'panels:'
 	pprint(panels)
 	for panel in panels:
-		panel=generatePanel.possiblyTransform(panel,999) # testing flipped panels
+		panel=generatePanel.possiblyTransform(panel,999) # Around 1/200 strips will have a flipped panel
 		box=(currentWidth,currentHeight,currentWidth+panel.size[0],panel.size[1]+currentHeight)
 		print 'making panel at: '+str(box)
 		img.paste(panel,box)
@@ -385,7 +385,7 @@ def processChatLog(file):
 			currentWidth=0
 			currentHeight+=panel.size[1]
 	#img.show()
-	img=generatePanel.possiblyTransform(img,99)
+	img=generatePanel.possiblyTransform(img,420) # Rotating the entire comic should be rarest of all
 	img.save("comic.jpg","JPEG")
 
 
