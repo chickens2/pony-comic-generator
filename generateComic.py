@@ -21,6 +21,7 @@ import os
 import json
 import getopt
 from getch import getch
+import utilFunctions
 
 #command line options
 textFileChat=None
@@ -122,31 +123,6 @@ def anonymizeText(text):
 	return newtext
 
 #
-def findBetween(s, first, last ):
-    try:
-        start = s.index( first ) + len( first )
-        end = s.index( last, start )
-        return s[start:end]
-    except ValueError:
-        return ""
-
-#
-def drawCenteredText(startY,text,draw,fnt,panelSize):
-
-	MAX_W, MAX_H = panelSize[0], panelSize[1]
-	current_h, pad = startY, 10
-	if text is not None:
-		para=textwrap.wrap(text, width=12)
-		print 'para:'
-		pprint(para)
-		#draw.text((5,5),para[0],font=fnt)
-		for line in para:
-			w, h = draw.textsize(line, font=fnt)
-			draw.text(((MAX_W - w) / 2, current_h), line, font=fnt,fill=(0,0,0,255))
-			current_h += h + pad
-	return current_h
-
-#
 def getTitle():
 	if specifiedTitle is not None:
 		return specifiedTitle
@@ -175,7 +151,7 @@ def createTitlePanel(panelSize):
 	title=getTitle()
 	img = Image.new("RGBA", panelSize, (255,255,255))
 	d = ImageDraw.Draw(img)
-	newh=drawCenteredText(25,title,d,fntLarge,panelSize)
+	newh=utilFunctions.drawCenteredText(25,title,d,fntLarge,panelSize)
 	newh+=17
 	d.text((15,newh), castIntro, font=fntSmall, fill=(0,0,0,255))
 	newh+=15
@@ -188,16 +164,8 @@ def createTitlePanel(panelSize):
 	generatePanel.drawBorder(img)
 	return img#img.show()
 
-#
-def isCorrectOrder(txtLine1,txtLine2,nameorder):
-	print 'comparing nameorder '+str(nameorder)+" "+txtLine2['name']
-	for name in nameorder:
-		if name == txtLine2['name']:
-			return False
-		if name == txtLine1['name']:
-			return True
-	return True
-prevNames=[]
+
+prevNames=[] # not sure what this is doing here
 
 #
 def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
@@ -262,28 +230,15 @@ def selectBackground(seed):
 	BAD_FILES=config.get('Ignore','banned_backgrounds').split()
 	result=None
 	#while result is None or os.path.isdir(result): # make sure that you don't pick a hidden system file by accident
-	return pickBackgroundFile('backgrounds',BAD_FILES) #random.choice(os.listdir('backgrounds'))
+	return utilFunctions.pickNestedFile('backgrounds',BAD_FILES) #random.choice(os.listdir('backgrounds'))
 	#return result
-
-# actually goes into the files
-# this might choke up if it encounters a directory only containing invalid files
-def pickBackgroundFile(directory,bad_files):
-	file=None
-	while file is None or file in bad_files:
-		file=random.choice(os.listdir(directory))
-	#file=directory+file # use the full path name
-	print "Trying file "+file+" to use as the background"
-	if os.path.isdir(os.path.join(directory,file))==True:
-		return pickBackgroundFile(directory+"/"+file,bad_files)
-	else:
-		return directory+"/"+file
 
 # processes the chat log for comic generation
 def processChatLog(file):
 	global selectedBackground
 	global lines
 	global allNames
-	generatePanel.genTransformDict()
+	utilFunctions.genTransformDict()
 	#findEmote.defaultSeed="".join(file)
 	print 'original allnames:'
 	pprint(allNames)
@@ -389,7 +344,7 @@ def processChatLog(file):
 	print 'panels:'
 	pprint(panels)
 	for panel in panels:
-		panel=generatePanel.possiblyTransform(panel,999) # Around 1/200 strips will have a flipped panel
+		panel=utilFunctions.possiblyTransform(panel,999) # Around 1/200 strips will have a flipped panel
 		box=(currentWidth,currentHeight,currentWidth+panel.size[0],panel.size[1]+currentHeight)
 		print 'making panel at: '+str(box)
 		img.paste(panel,box)
@@ -398,7 +353,7 @@ def processChatLog(file):
 			currentWidth=0
 			currentHeight+=panel.size[1]
 	#img.show()
-	img=generatePanel.possiblyTransform(img,420) # Rotating the entire comic should be rarest of all
+	img=utilFunctions.possiblyTransform(img,420) # Rotating the entire comic should be rarest of all
 	img.save("comic.jpg","JPEG")
 
 

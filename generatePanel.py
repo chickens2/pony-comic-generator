@@ -5,18 +5,16 @@
 
 from PIL import Image,ImageFont,ImageDraw
 from resizeimage import resizeimage
-import findEmote
+import findEmote, utilFunctions
 import random, ConfigParser
 import praw
+
 #charsInLine=22
 panelSize=(200,200)
 charHeight=None
 charHeightCloseup=None#charHeight*closeupMultiplier
 names={}#should mirror generatecomic name dictionary
 
-# draw a circle
-def circle(draw, center, radius):
-    draw.ellipse((center[0] - radius + 1, center[1] - radius + 1, center[0] + radius - 1, center[1] + radius - 1), fill=(255,255,255), outline=None)
 
 config = ConfigParser.ConfigParser()
 config.readfp(open('config.cfg'))
@@ -29,30 +27,7 @@ closeupMultiplier = config.getfloat('Options','closeup_zoom')
 boxBorder=(15,9)
 characterMaxSize=(panelSize[0]/2,panelSize[0]/2)
 
-#
-def setPanelSize(ps):
-	global panelSize
-	global charHeight
-	panelSize=ps
-	charHeight=3*panelSize[1]/7
-	charHeightCloseup=charHeight*closeupMultiplier
-setPanelSize(panelSize)
-
-#
-def insertLineBreaks(text,maxCharsPerLine):
-	words=text.split(" ")
-	newstr=""
-	currentCharCount=0
-	for word in words:
-		if currentCharCount+len(word)>maxCharsPerLine:
-			newstr+="\n"
-			currentCharCount=0
-		else:
-			newstr+=" "
-		currentCharCount+=len(word)+1
-		newstr+=word
-	newstr=newstr.strip()
-	return newstr
+utilFunctions.setPanelSizes(panelSize,closeupMultiplier) # I think this is where it went
 
 # draws text, returns how tall the box ended up being
 def drawText(image,text,box,arroworientation,color=None):
@@ -95,99 +70,6 @@ def drawText(image,text,box,arroworientation,color=None):
 	d.text((box[0]+boxBorder[0],box[1]+boxBorder[1]), text, font=fnt, fill=color)
 	return boxHeight
 
-# does a 2-pass check through PIL's im.transform() to access all 8 possible outcomes of one rotation optionally followed by one rotation
-def imageFlip(image):
-	tr=getTransform()
-	image=image.transpose(tr)
-	tr=getTransform(20)
-	if tr is None:
-		return image
-	else:
-		return image.transpose(tr) # 2 passes for best results
-
-# rolls an n-sided die and lets you know if the result is 0
-def rollOdds(n):
-	return random.randint(0,n)==0
-
-# give a float decimal for odds
-def rollFraction(odds):
-	if odds>1:
-		return random()<(1.0/float(odds))
-	else:
-		return random()<odds
-
-# generates a list of transformations to feed to PIL's im.transform()
-# nullWeight is the relative (to the size of transform_D) likelihood that you don't do any transformation for that step
-def getTransformList(length,nullWeight=10):
-	list=[]
-	for i in (1,length):
-		list.append(getTransform(nullWeight))
-	return list
-
-# applies a list of transformations to an image
-def applyTransformList(list,image):
-	for transformation in list:
-		if transformation is not None:
-			image=image.transpose(transformation)
-	return image
-
-# Possibly transforms an image
-def possiblyTransform(image,odds,length=2):
-	if rollOdds(odds):
-		return applyTransformList(getTransformList(length),image)
-	else:
-		return image
-
-# does the opposite transpositions as applyTranformList
-# if these two functions are called immediately after one another, the original image should be returned
-# have to go in reverse order for it to work consistently
-def undoTransformList(list,image):
-	undoList=[]
-	for transformation in list:
-		if transformation is not None:
-			undoList.insert(0,undoTransform_D[transformation])
-	return applyTransformList(undoList,image)
-
-# picks which transformation will be applied to the image
-def getTransform(allowNothing=None):
-	if allowNothing is not None:
-		maxNumber=len(transform_D.keys())+int(allowNothing)
-	else:
-		maxNumber=len(transform_D.keys())
-	x=random.randint(0,maxNumber)
-	return transform_D.get(x,None)
-
-# Generates the dicts that contain transforms that can be used with PIL's .transpose function
-# flip and rotate are relative odds as to which variety of transformation is chosen…
-# …if you're curious about the odds of *any* rotation or *any* reflection, there are 3 rotations and 2 flips
-# Using the mappings found in PIL/image.py for transformations
-def genTransformDict(flip=10,rotate=20):
-	global transform_D
-	global undoTransform_D
-	undoTransform_D={
-		0:0, #'FLIP_LEFT_RIGHT': 'FLIP_LEFT_RIGHT',
-		1:1, #'FLIP_TOP_BOTTOM': 'FLIP_TOP_BOTTOM',
-		3:3, #'ROTATE_180': 'ROTATE_180',
-		2:4, #'ROTATE_90': 'ROTATE_270',
-		4:2 #'ROTATE_270': 'ROTATE_90'
-	}
-	transform_D={}
-	x=0
-	for i in range(0,flip):
-		transform_D[i]=0 #"FLIP_LEFT_RIGHT"
-	x+=flip
-	for i in range(x,x+flip):
-		transform_D[i]=1 #"FLIP_TOP_BOTTOM"
-	x+=flip
-	for i in range(x,x+rotate):
-		transform_D[i]=2 #"ROTATE_90"
-	x+=rotate
-	for i in range(x,x+rotate):
-		transform_D[i]=3 #"ROTATE_180"
-	x+=rotate
-	for i in range(x,x+rotate):
-		transform_D[i]=4 #"ROTATE_270"
-
 # gets the background image for a panel
 # the background is chosen in selectBackground, which is called by processChatLog (both in generateComic.py)
 def getBackgroundImage(backgroundName,closeup=False):
@@ -195,9 +77,9 @@ def getBackgroundImage(backgroundName,closeup=False):
 	stretch=config.get('Options','squish_image').upper()=='TRUE'
 
 	#bg=imageFlip(bg)
-	messup=getTransformList(7,0)
+	messup=utilFunctions.getTransformList(7,0)
 	print "Transform list "+str(messup)
-	bg=applyTransformList(messup,bg)
+	bg=utilFunctions.applyTransformList(messup,bg)
 
 	if stretch:
 		if closeup:
@@ -230,13 +112,9 @@ def getBackgroundImage(backgroundName,closeup=False):
 
 	filter=Image.new('RGBA',bg.size,color=(255,255,255,128))
 	bg=Image.composite(bg,filter,filter)
-	if not rollOdds(420): #1/420 odds of a transformed background gives around a 1.18% chance that any given comic contains a transformed panel background
-		bg=undoTransformList(messup,bg)
+	if not utilFunctions.rollOdds(420): #1/420 odds of a transformed background gives around a 1.18% chance that any given comic contains a transformed panel background
+		bg=utilFunctions.undoTransformList(messup,bg)
 	return bg
-
-# This could be replaced with a Gaussian distribution with hard limits slapped on
-def triangularInt(low,high,mode):
-	return int(random.triangular(low,high,mode))
 
 #
 def getCharacterImage(name1,dialog1,transpose,imheight=None):
