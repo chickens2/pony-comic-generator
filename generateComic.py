@@ -87,6 +87,7 @@ anonymousMode=config.get('Options','anonymous_mode').upper()=='TRUE'
 uploadImgur=config.get('Options','upload_imgur').upper()=='TRUE'
 castIntro=config.get('Options','cast_introduction')
 repeatMode=config.get('Options','keep_window_open').upper()=='TRUE'
+closeupMultiplier = config.getfloat('Options','closeup_zoom')
 
 uploadReddit=None
 reddit = None
@@ -171,7 +172,7 @@ prevNames=[] # not sure what this is doing here
 def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 	global prevNames
 	dialogueOptions=[0]
-	generatePanel.setPanelSize(panelSize)
+	#utilFunctions.setPanelSizes(panelSize,closeupMultiplier)
 	print 'nameorder: '+str(nameorder)
 	print 'gppanelsize '+str(generatePanel.panelSize)+" "+str(panelSize)
 	if len(txtLines)>1 and txtLines[1]['name'] != txtLines[0]['name'] and generatePanel.hasRoomForDialogue2(txtLines[0]['text'],txtLines[1]['text'] ):
@@ -205,8 +206,8 @@ def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 		panel=generatePanel.drawPanel1Character(txtLines[0]['name'],txtLines[0]['text'],selectedBackground,iscloseup=closeup)
 		del txtLines[0]
 	if dialogueChoice==1:
-		print 'iscorrectorder: '+str(isCorrectOrder(txtLines[0],txtLines[1],nameorder))
-		if isCorrectOrder(txtLines[0],txtLines[1],nameorder):
+		print 'iscorrectorder: '+str(utilFunctions.isCorrectOrder(txtLines[0],txtLines[1],nameorder))
+		if utilFunctions.isCorrectOrder(txtLines[0],txtLines[1],nameorder):
 			panel=generatePanel.drawPanel2Characters(txtLines[0]['name'],txtLines[1]['name'],txtLines[0]['text'],txtLines[1]['text'],selectedBackground,iscloseup=closeup)
 		else:
 			panel=generatePanel.drawPanel2Characters(txtLines[1]['name'],txtLines[0]['name'],txtLines[0]['text'],txtLines[1]['text'],selectedBackground,textOrder=1,iscloseup=closeup)
@@ -260,7 +261,7 @@ def processChatLog(file):
 			print 'new line '+line
 		if line.count('<')<1 or line.count('>')<1:
 			continue
-		name=findBetween(line,'<','>').lower()
+		name=utilFunctions.findBetween(line,'<','>').lower()
 		if name not in nameOrder:
 			nameOrder.append(name)
 		pony=None
@@ -309,6 +310,7 @@ def processChatLog(file):
 	if mostInARow>3:
 		smallPanels=True
 		panelSize=(200,200)
+	utilFunctions.setPanelSizes(panelSize,closeupMultiplier)
 	tp=createTitlePanel(panelSize)
 	print 'generatecomic panelsize: '+str(panelSize)
 	#tp.show()
@@ -364,7 +366,7 @@ if textFileChat is None:
 	chatfile=StringIO.StringIO(clipboard)
 else:
 	chatfile=open(textFileChat).readlines()
-random.seed(chatfile) # may not be strictly necessary, but we want a guaranteed procedural seed in here somewhere
+random.seed(open(textFileChat)) # may not be strictly necessary, but we want a guaranteed procedural seed in here somewhere
 processChatLog(chatfile)#open('exampleChat12.txt','r'))
 if uploadImgur:
 	image=client.upload_from_path('comic.jpg')

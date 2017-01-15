@@ -5,7 +5,9 @@
 
 # A collection of utility functions that don't need to be specific to any part of the program
 
-import random,os
+import random,os,textwrap
+from pprint import pprint
+from PIL import Image
 
 # Something about finding if first and last are in that order in s?
 def findBetween(s, first, last ):
@@ -89,7 +91,8 @@ def getTransformList(length,nullWeight=10):
 def applyTransformList(list,image):
 	for transformation in list:
 		if transformation is not None:
-			image=image.transpose(transformation)
+			image=image.transpose(Image.ROTATE_180)
+			# eval(transformation), so we're not relying on the hard-coded internal numbers in the Image module
 	return image
 
 # Possibly transforms an image
@@ -128,20 +131,20 @@ def genTransformDict(flip=10,rotate=20):
 	global transform_D
 	global undoTransform_D
 	undoTransform_D={
-		0:0, #'FLIP_LEFT_RIGHT': 'FLIP_LEFT_RIGHT',
-		1:1, #'FLIP_TOP_BOTTOM': 'FLIP_TOP_BOTTOM',
-		3:3, #'ROTATE_180': 'ROTATE_180',
-		2:4, #'ROTATE_90': 'ROTATE_270',
-		4:2 #'ROTATE_270': 'ROTATE_90'
+		'Image.FLIP_LEFT_RIGHT': 'Image.FLIP_LEFT_RIGHT', #0:0
+		'Image.FLIP_TOP_BOTTOM': 'Image.FLIP_TOP_BOTTOM', #1:1
+		'Image.ROTATE_180': 'Image.ROTATE_180', #3:3
+		'Image.ROTATE_90': 'Image.ROTATE_270', #2:4
+		'Image.ROTATE_270': 'Image.ROTATE_90' #4:2
 	}
 	transform_D={}
 	genProbabilityDict(
 		{
-			0:flip,
-			1:flip,
-			2:rotate,
-			3:rotate,
-			4:rotate},
+			'Image.FLIP_LEFT_RIGHT':flip, #0
+			'Image.FLIP_TOP_BOTTOM':flip, #1
+			'Image.ROTATE_90':rotate, #2
+			'Image.ROTATE_180':rotate, #3
+			'Image.ROTATE_270':rotate}, #4
 		transform_D,
 		0)
 
@@ -149,9 +152,12 @@ def genTransformDict(flip=10,rotate=20):
 def setPanelSizes(ps,closeupMultiplier):
 	global panelSize
 	global charHeight
+	global charHeightCloseup
+	global smallCharHeight
 	panelSize=ps
-	charHeight=3*panelSize[1]/7
-	charHeightCloseup=charHeight*closeupMultiplier
+	charHeight=float(3*panelSize[1]/7)
+	charHeightCloseup=int(charHeight*closeupMultiplier)
+	smallCharHeight=int(charHeight/closeupMultiplier)
 
 # Breaks text at spaces after it reaches the maximum number of characters in a line
 def insertLineBreaks(text,maxCharsPerLine):

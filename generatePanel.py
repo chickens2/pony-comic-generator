@@ -8,9 +8,12 @@ from resizeimage import resizeimage
 import findEmote, utilFunctions
 import random, ConfigParser
 import praw
+from utilFunctions import insertLineBreaks
 
 #charsInLine=22
 panelSize=(200,200)
+global charHeight
+global charHeightCloseup
 charHeight=None
 charHeightCloseup=None#charHeight*closeupMultiplier
 names={}#should mirror generatecomic name dictionary
@@ -27,7 +30,10 @@ closeupMultiplier = config.getfloat('Options','closeup_zoom')
 boxBorder=(15,9)
 characterMaxSize=(panelSize[0]/2,panelSize[0]/2)
 
-utilFunctions.setPanelSizes(panelSize,closeupMultiplier) # I think this is where it went
+utilFunctions.setPanelSizes(panelSize,closeupMultiplier) # moved to generate comic.py
+charHeight=int(utilFunctions.charHeight)
+charHeightCloseup=utilFunctions.charHeightCloseup
+farCharHeight=utilFunctions.smallCharHeight
 
 # draws text, returns how tall the box ended up being
 def drawText(image,text,box,arroworientation,color=None):
@@ -176,9 +182,9 @@ def getBubbleLength():
 def draw3CharactersAndBackground(name1,name2,name3,dialog1,dialog2,dialog3,backgroundName,closeup=True):
 	bg=getBackgroundImage(backgroundName,closeup)
 	im=None
-	heightUsed=int(charHeight/closeupMultiplier)
-	#if closeup and charHeightCloseup is not None:
-	#	heightUsed=charHeightCloseup
+	heightUsed=farCharHeight
+	if closeup and charHeightCloseup is not None:
+		heightUsed=charHeightCloseup
 	im=getCharacterImage(name1,dialog1,True,heightUsed)
 	posx=5
 	posy=panelSize[1]-im.size[1]
@@ -201,13 +207,26 @@ def draw3CharactersAndBackground(name1,name2,name3,dialog1,dialog2,dialog3,backg
 
 	return bg
 
+# try to make a generic character drawing
+# list is a dictionary in the form of {Name1:Dialogue1,Name2:Dialogue2,etc…}
+def putCharactersOnBackground(list,backgroundName,closeup=True):
+	bg=getBackgroundImage(backgroundName,closeup)
+	im=None
+	heightUsed=farCharHeight
+	if closeup:
+		heightUsed=charHeight
+	for name in list.keys():
+		im=getCharacterImage(name,list[name],False,heightUsed)
+		posy=panelSize[1]-im.size[1]
+		#posx+=
+
 #
 def draw2CharactersAndBackground(name1,name2,dialog1,dialog2,backgroundName,closeup=True):
 	bg=getBackgroundImage(backgroundName,closeup)
 	im=None
-	heightUsed=charHeight/closeupMultiplier
+	heightUsed=farCharHeight
 	if closeup:
-		heightUsed=charHeightCloseup
+		heightUsed=charHeight
 	im=getCharacterImage(name1,dialog1,True,heightUsed)
 	posx=25
 	posy=panelSize[1]-im.size[1]
@@ -227,9 +246,9 @@ def draw2CharactersAndBackground(name1,name2,dialog1,dialog2,backgroundName,clos
 #
 def draw1CharacterAndBackground(name1,dialog1,backgroundName,closeup=True):
 	bg=getBackgroundImage(backgroundName,closeup)
-	heightUsed=charHeight/closeupMultiplier
+	heightUsed=farCharHeight
 	if closeup:
-		heightUsed=charHeightCloseup
+		heightUsed=charHeight
 	im=getCharacterImage(name1,dialog1,True,heightUsed)
 	posx=panelSize[0]/2-im.size[0]/2
 	posy=panelSize[1]-im.size[1]
