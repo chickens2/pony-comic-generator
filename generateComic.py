@@ -21,6 +21,7 @@ import os
 import json
 import getopt
 from getch import getch
+import string
 
 #command line options
 textFileChat=None
@@ -165,7 +166,7 @@ def getTitle():
 			del words[0]
 			#print 'words:'
 			#pprint(words)
-		title=" ".join(words).title()
+		title=string.capwords(" ".join(words))
 		#title=textwrap.wrap(title, width=15)
 		print 'title '+str(title)
 	return title
