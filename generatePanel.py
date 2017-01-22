@@ -11,12 +11,19 @@ import praw
 from utilFunctions import insertLineBreaks
 
 #charsInLine=22
+global panelSize
 panelSize=(200,200)
 global charHeight
 global charHeightCloseup
 charHeight=None
 charHeightCloseup=None#charHeight*closeupMultiplier
 names={}#should mirror generatecomic name dictionary
+
+# set the panel size from another module
+def setPS(ps):
+	global panelSize
+	panelSize=ps
+	return ps
 
 
 config = ConfigParser.ConfigParser()
@@ -30,10 +37,8 @@ closeupMultiplier = config.getfloat('Options','closeup_zoom')
 boxBorder=(15,9)
 characterMaxSize=(panelSize[0]/2,panelSize[0]/2)
 
-utilFunctions.setPanelSizes(panelSize,closeupMultiplier) # moved to generate comic.py
-charHeight=int(utilFunctions.charHeight)
-charHeightCloseup=utilFunctions.charHeightCloseup
-farCharHeight=utilFunctions.smallCharHeight
+charHeight,charHeightCloseup,farCharHeight=utilFunctions.setPanelSizes(panelSize,closeupMultiplier) # moved to generate comic.py
+
 
 # draws text, returns how tall the box ended up being
 def drawText(image,text,box,arroworientation,color=None):
@@ -104,8 +109,8 @@ def getBackgroundImage(backgroundName,closeup=False):
 		if closeup:
 			bigWidth=int(wX*closeupMultiplier)
 			bigHeight=int(hY*closeupMultiplier)
-			offX=int(triangularInt(-wX,wX,0)/closeupMultiplier)/4
-			offY=int(triangularInt(-hY,hY,0)/closeupMultiplier)/4
+			offX=int(utilFunctions.triangularInt(-wX,wX,0)/closeupMultiplier)/4
+			offY=int(utilFunctions.triangularInt(-hY,hY,0)/closeupMultiplier)/4
 
 			left=(bigWidth-wX)/2+offX
 			top=(bigHeight-hY)/2+offY

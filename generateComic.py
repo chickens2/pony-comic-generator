@@ -44,13 +44,13 @@ print 'chat from log: '+str(textFileChat)
 
 #direct print output to log file
 class Logger(object):
-    def __init__(self):
-        self.terminal = sys.stdout
-        self.log = open("log.txt", "w")
+	def __init__(self):
+		self.terminal = sys.stdout
+		self.log = open("log.txt", "w")
 
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)
+	def write(self, message):
+		self.terminal.write(message)
+		self.log.write(message)
 
 sys.stdout = Logger()
 
@@ -172,7 +172,7 @@ prevNames=[] # not sure what this is doing here
 def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 	global prevNames
 	dialogueOptions=[0]
-	#utilFunctions.setPanelSizes(panelSize,closeupMultiplier)
+	generatePanel.setPS(panelSize)
 	print 'nameorder: '+str(nameorder)
 	print 'gppanelsize '+str(generatePanel.panelSize)+" "+str(panelSize)
 	if len(txtLines)>1 and txtLines[1]['name'] != txtLines[0]['name'] and generatePanel.hasRoomForDialogue2(txtLines[0]['text'],txtLines[1]['text'] ):
@@ -231,7 +231,14 @@ def selectBackground(seed):
 	BAD_FILES=config.get('Ignore','banned_backgrounds').split()
 	result=None
 	#while result is None or os.path.isdir(result): # make sure that you don't pick a hidden system file by accident
-	return utilFunctions.pickNestedFile('backgrounds',BAD_FILES) #random.choice(os.listdir('backgrounds'))
+	if config.has_section('Backgrounds')==False or config.options('Backgrounds')==[]:
+		return utilFunctions.pickNestedFile('backgrounds',BAD_FILES) #random.choice(os.listdir('backgrounds'))
+	else:
+		folderTable={}
+		for folder in config.options('Backgrounds'):
+			folderTable[folder]=config.getint('Backgrounds',folder)
+		directory=utilFunctions.weightedDictPick(utilFunctions.genProbabilityDict(folderTable))
+		return utilFunctions.pickNestedFile('backgrounds/'+directory,BAD_FILES)
 	#return result
 
 # processes the chat log for comic generation
@@ -239,7 +246,9 @@ def processChatLog(file):
 	global selectedBackground
 	global lines
 	global allNames
-	utilFunctions.genTransformDict()
+	global transform_D
+	global undoTransform_D
+	transform_D,undoTransform_D = utilFunctions.genTransformDict()
 	#findEmote.defaultSeed="".join(file)
 	print 'original allnames:'
 	pprint(allNames)
@@ -305,12 +314,13 @@ def processChatLog(file):
 	global allText
 	allText=text
 	#print 'at1'+str(allText)+'^'
-	smallPanels=False
-	panelSize=(300,300)
 	if mostInARow>3:
 		smallPanels=True
 		panelSize=(200,200)
-	utilFunctions.setPanelSizes(panelSize,closeupMultiplier)
+	else:
+		smallPanels=False
+		panelSize=(300,300)
+
 	tp=createTitlePanel(panelSize)
 	print 'generatecomic panelsize: '+str(panelSize)
 	#tp.show()
@@ -359,14 +369,16 @@ def processChatLog(file):
 	img.save("comic.jpg","JPEG")
 
 
+
 chatfile=None
 if textFileChat is None:
 	clipboard=pyperclip.paste().encode('utf8')
 	print 'clipboard is: \n'+str(clipboard)
 	chatfile=StringIO.StringIO(clipboard)
+	random.seed(clipboard)
 else:
 	chatfile=open(textFileChat).readlines()
-random.seed(open(textFileChat)) # may not be strictly necessary, but we want a guaranteed procedural seed in here somewhere
+	random.seed(open(textFileChat))
 processChatLog(chatfile)#open('exampleChat12.txt','r'))
 if uploadImgur:
 	image=client.upload_from_path('comic.jpg')

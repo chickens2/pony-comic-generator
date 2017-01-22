@@ -10,17 +10,16 @@ from pprint import pprint
 from PIL import Image
 
 # Something about finding if first and last are in that order in s?
-def findBetween(s, first, last ):
-    try:
-        start = s.index( first ) + len( first )
-        end = s.index( last, start )
-        return s[start:end]
-    except ValueError:
-        return ""
+def findBetween(s, first, last):
+	try:
+		start = s.index(first) + len(first)
+		end = s.index(last, start)
+		return s[start:end]
+	except ValueError:
+		return ""
 
 # Draw text centered?
 def drawCenteredText(startY,text,draw,fnt,panelSize):
-
 	MAX_W, MAX_H = panelSize[0], panelSize[1]
 	current_h, pad = startY, 10
 	if text is not None:
@@ -126,10 +125,8 @@ def weightedDictPick(weightedDict,increasedNoneWeight=0):
 # Generates the dicts that contain transforms that can be used with PIL's .transpose function
 # flip and rotate are relative odds as to which variety of transformation is chosen…
 # …if you're curious about the odds of *any* rotation or *any* reflection, there are 3 rotations and 2 flips
-# Using the mappings found in PIL/image.py for transformations
+# Using the mappings found in PIL/image.py for transformations (that's what's with the numbers)
 def genTransformDict(flip=10,rotate=20):
-	global transform_D
-	global undoTransform_D
 	undoTransform_D={
 		'Image.FLIP_LEFT_RIGHT': 'Image.FLIP_LEFT_RIGHT', #0:0
 		'Image.FLIP_TOP_BOTTOM': 'Image.FLIP_TOP_BOTTOM', #1:1
@@ -144,20 +141,19 @@ def genTransformDict(flip=10,rotate=20):
 			'Image.FLIP_TOP_BOTTOM':flip, #1
 			'Image.ROTATE_90':rotate, #2
 			'Image.ROTATE_180':rotate, #3
-			'Image.ROTATE_270':rotate}, #4
+			'Image.ROTATE_270':rotate #4
+		},
 		transform_D,
 		0)
+	return transform_D, undoTransform_D
 
 # Sets the panel size
 def setPanelSizes(ps,closeupMultiplier):
-	global panelSize
-	global charHeight
-	global charHeightCloseup
-	global smallCharHeight
 	panelSize=ps
-	charHeight=float(3*panelSize[1]/7)
+	charHeight=3*panelSize[1]/7
 	charHeightCloseup=int(charHeight*closeupMultiplier)
 	smallCharHeight=int(charHeight/closeupMultiplier)
+	return charHeight,charHeightCloseup,smallCharHeight
 
 # Breaks text at spaces after it reaches the maximum number of characters in a line
 def insertLineBreaks(text,maxCharsPerLine):
@@ -177,7 +173,8 @@ def insertLineBreaks(text,maxCharsPerLine):
 
 # draw a circle
 def circle(draw, center, radius):
-    draw.ellipse((center[0] - radius + 1, center[1] - radius + 1, center[0] + radius - 1, center[1] + radius - 1), fill=(255,255,255), outline=None)
+	draw.ellipse((center[0] - radius + 1, center[1] - radius + 1, center[0] + radius - 1, center[1] + radius - 1), fill=(255,255,255), outline=None)
+
 
 # This could be replaced with a Gaussian distribution with hard limits slapped on
 def triangularInt(low,high,mode):
@@ -191,6 +188,8 @@ def analyseLine(line,namelist):
 # Populates a dictionary for random selection with weights from another dictionary
 # I'm really sure there's a better way to do this, but I have no idea what it would be
 def genProbabilityDict(probabilityTable,outputDict=None,noneWeight=0):
+	if outputDict is None:
+		outputDict={}
 	counter=0
 	for entry in probabilityTable:
 		weight=int(probabilityTable[entry])
@@ -201,3 +200,4 @@ def genProbabilityDict(probabilityTable,outputDict=None,noneWeight=0):
 		outuptDict[i]=None
 	return outputDict
 
+transform_D, undoTransform_D = genTransformDict()
