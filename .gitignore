@@ -19,6 +19,7 @@ testLogs/*
 *.bak
 backgrounds/Custom/*
 misc-script/*
+config.cfg
 
 #
 # Python .gitignore from GitHub
