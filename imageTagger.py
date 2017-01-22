@@ -1,14 +1,21 @@
+# coding=UTF-8
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+# vim: set fileencoding=UTF-8 :
+
 import iteratemotes
-import msvcrt
+#import msvcrt
 import sys
 import findEmote
 from PIL import Image,ImageFont,ImageDraw
 from getch import getch
+
 daynum=31
 print 'enter emote tag: '
 tag=raw_input()
 index=0
 emotes=findEmote.emotesByPony[tag]
+
 for emote in emotes:
 	print emote
 	emoteImg=findEmote.getEmote(emote)

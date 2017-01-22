@@ -21,7 +21,9 @@ import os
 import json
 import getopt
 from getch import getch
+import utilFunctions
 import string
+
 
 #command line options
 textFileChat=None
@@ -44,13 +46,13 @@ print 'chat from log: '+str(textFileChat)
 
 #direct print output to log file
 class Logger(object):
-    def __init__(self):
-        self.terminal = sys.stdout
-        self.log = open("log.txt", "w")
+	def __init__(self):
+		self.terminal = sys.stdout
+		self.log = open("log.txt", "w")
 
-    def write(self, message):
-        self.terminal.write(message)
-        self.log.write(message)
+	def write(self, message):
+		self.terminal.write(message)
+		self.log.write(message)
 
 sys.stdout = Logger()
 
@@ -87,6 +89,7 @@ anonymousMode=config.get('Options','anonymous_mode').upper()=='TRUE'
 uploadImgur=config.get('Options','upload_imgur').upper()=='TRUE'
 castIntro=config.get('Options','cast_introduction')
 repeatMode=config.get('Options','keep_window_open').upper()=='TRUE'
+closeupMultiplier = config.getfloat('Options','closeup_zoom')
 
 uploadReddit=None
 reddit = None
@@ -123,31 +126,6 @@ def anonymizeText(text):
 	return newtext
 
 #
-def findBetween(s, first, last ):
-    try:
-        start = s.index( first ) + len( first )
-        end = s.index( last, start )
-        return s[start:end]
-    except ValueError:
-        return ""
-
-#
-def drawCenteredText(startY,text,draw,fnt,panelSize):
-
-	MAX_W, MAX_H = panelSize[0], panelSize[1]
-	current_h, pad = startY, 10
-	if text is not None:
-		para=textwrap.wrap(text, width=12)
-		print 'para:'
-		pprint(para)
-		#draw.text((5,5),para[0],font=fnt)
-		for line in para:
-			w, h = draw.textsize(line, font=fnt)
-			draw.text(((MAX_W - w) / 2, current_h), line, font=fnt,fill=(0,0,0,255))
-			current_h += h + pad
-	return current_h
-
-#
 def getTitle():
 	if specifiedTitle is not None:
 		return specifiedTitle
@@ -176,7 +154,7 @@ def createTitlePanel(panelSize):
 	title=getTitle()
 	img = Image.new("RGBA", panelSize, (255,255,255))
 	d = ImageDraw.Draw(img)
-	newh=drawCenteredText(25,title,d,fntLarge,panelSize)
+	newh=utilFunctions.drawCenteredText(25,title,d,fntLarge,panelSize)
 	newh+=17
 	d.text((15,newh), castIntro, font=fntSmall, fill=(0,0,0,255))
 	newh+=15
@@ -189,22 +167,14 @@ def createTitlePanel(panelSize):
 	generatePanel.drawBorder(img)
 	return img#img.show()
 
-#
-def isCorrectOrder(txtLine1,txtLine2,nameorder):
-	print 'comparing nameorder '+str(nameorder)+" "+txtLine2['name']
-	for name in nameorder:
-		if name == txtLine2['name']:
-			return False
-		if name == txtLine1['name']:
-			return True
-	return True
-prevNames=[]
+
+prevNames=[] # not sure what this is doing here
 
 #
 def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 	global prevNames
 	dialogueOptions=[0]
-	generatePanel.setPanelSize(panelSize)
+	generatePanel.setPS(panelSize)
 	print 'nameorder: '+str(nameorder)
 	print 'gppanelsize '+str(generatePanel.panelSize)+" "+str(panelSize)
 	if len(txtLines)>1 and txtLines[1]['name'] != txtLines[0]['name'] and generatePanel.hasRoomForDialogue2(txtLines[0]['text'],txtLines[1]['text'] ):
@@ -238,8 +208,8 @@ def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 		panel=generatePanel.drawPanel1Character(txtLines[0]['name'],txtLines[0]['text'],selectedBackground,iscloseup=closeup)
 		del txtLines[0]
 	if dialogueChoice==1:
-		print 'iscorrectorder: '+str(isCorrectOrder(txtLines[0],txtLines[1],nameorder))
-		if isCorrectOrder(txtLines[0],txtLines[1],nameorder):
+		print 'iscorrectorder: '+str(utilFunctions.isCorrectOrder(txtLines[0],txtLines[1],nameorder))
+		if utilFunctions.isCorrectOrder(txtLines[0],txtLines[1],nameorder):
 			panel=generatePanel.drawPanel2Characters(txtLines[0]['name'],txtLines[1]['name'],txtLines[0]['text'],txtLines[1]['text'],selectedBackground,iscloseup=closeup)
 		else:
 			panel=generatePanel.drawPanel2Characters(txtLines[1]['name'],txtLines[0]['name'],txtLines[0]['text'],txtLines[1]['text'],selectedBackground,textOrder=1,iscloseup=closeup)
@@ -262,16 +232,25 @@ def selectBackground(seed):
 		return specifiedBackground
 	BAD_FILES=config.get('Ignore','banned_backgrounds').split()
 	result=None
-	while result is None or result in BAD_FILES: # make sure that you don't pick a hidden system file by accident
-		result=random.choice(os.listdir('backgrounds'))
-	return 'backgrounds/'+result
+	#while result is None or os.path.isdir(result): # make sure that you don't pick a hidden system file by accident
+	if config.has_section('Backgrounds')==False or config.options('Backgrounds')==[]:
+		return utilFunctions.pickNestedFile('backgrounds',BAD_FILES) #random.choice(os.listdir('backgrounds'))
+	else:
+		folderTable={}
+		for folder in config.options('Backgrounds'):
+			folderTable[folder]=config.getint('Backgrounds',folder)
+		directory=utilFunctions.weightedDictPick(utilFunctions.genProbabilityDict(folderTable))
+		return utilFunctions.pickNestedFile('backgrounds/'+directory,BAD_FILES)
+	#return result
 
 # processes the chat log for comic generation
 def processChatLog(file):
 	global selectedBackground
 	global lines
 	global allNames
-	generatePanel.genTransformDict()
+	global transform_D
+	global undoTransform_D
+	transform_D,undoTransform_D = utilFunctions.genTransformDict()
 	#findEmote.defaultSeed="".join(file)
 	print 'original allnames:'
 	pprint(allNames)
@@ -293,7 +272,7 @@ def processChatLog(file):
 			print 'new line '+line
 		if line.count('<')<1 or line.count('>')<1:
 			continue
-		name=findBetween(line,'<','>').lower()
+		name=utilFunctions.findBetween(line,'<','>').lower()
 		if name not in nameOrder:
 			nameOrder.append(name)
 		pony=None
@@ -337,11 +316,13 @@ def processChatLog(file):
 	global allText
 	allText=text
 	#print 'at1'+str(allText)+'^'
-	smallPanels=False
-	panelSize=(300,300)
 	if mostInARow>3:
 		smallPanels=True
 		panelSize=(200,200)
+	else:
+		smallPanels=False
+		panelSize=(300,300)
+
 	tp=createTitlePanel(panelSize)
 	print 'generatecomic panelsize: '+str(panelSize)
 	#tp.show()
@@ -377,7 +358,7 @@ def processChatLog(file):
 	print 'panels:'
 	pprint(panels)
 	for panel in panels:
-		panel=generatePanel.possiblyTransform(panel,999) # testing flipped panels
+		panel=utilFunctions.possiblyTransform(panel,999) # Around 1/200 strips will have a flipped panel
 		box=(currentWidth,currentHeight,currentWidth+panel.size[0],panel.size[1]+currentHeight)
 		print 'making panel at: '+str(box)
 		img.paste(panel,box)
@@ -386,8 +367,9 @@ def processChatLog(file):
 			currentWidth=0
 			currentHeight+=panel.size[1]
 	#img.show()
-	img=generatePanel.possiblyTransform(img,99)
+	img=utilFunctions.possiblyTransform(img,420) # Rotating the entire comic should be rarest of all
 	img.save("comic.jpg","JPEG")
+
 
 
 chatfile=None
@@ -395,9 +377,10 @@ if textFileChat is None:
 	clipboard=pyperclip.paste().encode('utf8')
 	print 'clipboard is: \n'+str(clipboard)
 	chatfile=StringIO.StringIO(clipboard)
+	random.seed(clipboard)
 else:
 	chatfile=open(textFileChat).readlines()
-random.seed(chatfile) # may not be strictly necessary, but we want a guaranteed procedural seed in here somewhere
+	random.seed(open(textFileChat))
 processChatLog(chatfile)#open('exampleChat12.txt','r'))
 if uploadImgur:
 	image=client.upload_from_path('comic.jpg')

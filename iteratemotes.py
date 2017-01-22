@@ -1,8 +1,13 @@
+# coding=UTF-8
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+# vim: set fileencoding=UTF-8 :
+
 import urllib
 from urllib import FancyURLopener
 from PIL import Image,ImageFont,ImageDraw
 import cacher
-import msvcrt
+#import msvcrt
 import json
 import os
 import sys
@@ -123,7 +128,7 @@ def processDataRecursive(tag,image):
 				selectedCount=0
 				return 'exit'
 		return processDataRecursive(tag2,image)
-			
+
 def processData(image):
 	global selectedCount
 	selectedCount=0
@@ -135,7 +140,7 @@ def processData(image):
 def getPageData(tag):
 	pass
 
-	
+
 	# filename= cacher.getUrlFile(url)
 	# file=open(filename,'r')
 	# contents=file.read()

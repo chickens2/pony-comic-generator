@@ -8,8 +8,8 @@
 * tagging improvements
 	* More options for tagging
 	* Tag fonts & bg as well? (or at least set up the plumbing for it)
-	* Support folders for backgrounds
-* Actually add all the new backgrounds (I've got a bunch and want to add the folder support so they don't drown out the current pool)
+* Maybe a couple more backgrounds
+* Ability to assign weights to different subfolders of backgrounds
 
 ##### Font PR (later)
 
