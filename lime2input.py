@@ -40,33 +40,37 @@ for arg in sys.argv:
 				guessMode = int(arg)
 
 #
-def convertLimelog(limechat,gm):
+def convertLimelog(limechat, gm):
 	newchat = []
 	rawwords = []
 	for line in limechat:
 		rawwords.append(line.split())
 		# rawwords should be an array of arrays, with the inner array being ["hh:mm", "nick", "word1", "word2", etc…]
-	if gm > 0:
-		aids=8
-	else:
-		for wordlist in rawwords:
-			newline = ""
-			if ':' in wordlist[1]: # normal line
-				newline = "<" + wordlist[1][:-1] + ">" # <nick>
-			else:
-				newline = "* " + wordlist[1] # * nick
-			for word in wordlist[2:]:
-				newline += " "
-				newline += word
-			newline += '\n'
-			newchat.append(newline)
-
-
+	for wordlist in rawwords:
+		newchat.append(processLine(wordlist[1],wordlist[2:],gm))
+		newchat += '\n'
 	return newchat
 
-# assumes that any usernames that are the first
-def processLine(name,message,guessstrat):
-	return words
+"""
+name: nick saying the line
+message: array of strings, each containing a word in the message
+guessstrat: how aggressive to be when guessing at what is a /me statement
+"""
+def processLine(name, message, guessstrat):
+	newline = ""
+	if ':' not in name: # explicit /me command
+		return assembleMeLine(name, message)
+
+
+	return assembleNormalLine(name, message)
+
+#
+def assembleMeLine(name, messagewords):
+	return "* " + name + " " + " ".join(messagewords)
+
+#
+def assembleNormalLine(name, messagewords):
+	return "<" + name[:-1] + "> " + " ".join(messagewords)
 
 chatfile = None
 if limeLog is None:
