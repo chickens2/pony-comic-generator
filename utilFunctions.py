@@ -122,10 +122,13 @@ def getTransform(allowNothing=None):
 def weightedDictPick(weightedDict,increasedNoneWeight=0):
 	return weightedDict.get(random.randint(0,len(weightedDict.keys())+increasedNoneWeight),None)
 
-# Generates the dicts that contain transforms that can be used with PIL's .transpose function
-# flip and rotate are relative odds as to which variety of transformation is chosen…
-# …if you're curious about the odds of *any* rotation or *any* reflection, there are 3 rotations and 2 flips
-# Using the mappings found in PIL/image.py for transformations (that's what's with the numbers)
+'''
+Generates the dicts that contain transforms that can be used with PIL's transpose function.
+Flip and rotate are relative odds as to which variety of transformation is chosen:
+if you're curious about the odds of *any* rotation or *any* reflection, there are 3 rotations and 2 flips.
+
+The commented numbers are the mappings found in PIL/image.py
+'''
 def genTransformDict(flip=10,rotate=20):
 	undoTransform_D={
 		'Image.FLIP_LEFT_RIGHT': 'Image.FLIP_LEFT_RIGHT', #0:0

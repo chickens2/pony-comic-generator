@@ -72,6 +72,7 @@ allNames=dict(config2.items('Aliases'))
 config = ConfigParser.ConfigParser()
 config.readfp(open('config.cfg'))
 
+# Set up names list
 allText=""
 lines=[]
 allNames.update(dict(config.items('Aliases'))) #add aliases from config.cfg, overwrite defaults
@@ -82,6 +83,8 @@ allNames=allNames2
 print 'final alias list: '
 pprint(allNames)
 names={}
+
+# Load things from the config file
 selectedBackground=None
 fntLarge = ImageFont.truetype(config.get('Fonts','title_font'),int(config.get('Fonts','title_size'))) #used for the title
 fntSmall= ImageFont.truetype(config.get('Fonts','cast_font'),int(config.get('Fonts','cast_size'))) #used for the list of characters
@@ -103,7 +106,7 @@ if config.has_section('praw') and len(config.get('praw','clientid'))>2:
 					password=config.get('praw','password'))
 	print 'reddit credentials:'+str(config.get('praw','clientsecret'))+" "+config.get('praw','clientid')
 
-#
+# Replace all mentions of nicks with their corresponding pony names
 def anonymizeText(text):
 	newtext=text
 	newWords=[]
@@ -125,7 +128,7 @@ def anonymizeText(text):
 		newtext=" ".join(newWords)
 	return newtext
 
-#
+# Pick a title for the strip
 def getTitle():
 	if specifiedTitle is not None:
 		return specifiedTitle
@@ -149,20 +152,20 @@ def getTitle():
 		print 'title '+str(title)
 	return title
 
-#
+# Makes the title panel
 def createTitlePanel(panelSize):
 	title=getTitle()
-	img = Image.new("RGBA", panelSize, (255,255,255))
+	img = Image.new("RGBA", panelSize, (255,255,255)) # white background
 	d = ImageDraw.Draw(img)
 	newh=utilFunctions.drawCenteredText(25,title,d,fntLarge,panelSize)
 	newh+=17
-	d.text((15,newh), castIntro, font=fntSmall, fill=(0,0,0,255))
+	d.text((15,newh), castIntro, font=fntSmall, fill=(0,0,0,255)) # black text
 	newh+=15
 	for key,value in names.iteritems():
 		text=value
 		if not anonymousMode:
 			text=text+" as "+key
-		d.text((15,newh), text, font=fntSmall, fill=(0,0,0,255))
+		d.text((15,newh), text, font=fntSmall, fill=(0,0,0,255)) # black text
 		newh+=15
 	generatePanel.drawBorder(img)
 	return img#img.show()
@@ -227,21 +230,18 @@ def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 # selects which background image to use
 def selectBackground(seed):
 	random.seed(seed)
-	#specifiedBackground #stub for future use
 	if specifiedBackground is not None: # let command-line switches specify a background
 		return specifiedBackground
 	BAD_FILES=config.get('Ignore','banned_backgrounds').split()
 	result=None
-	#while result is None or os.path.isdir(result): # make sure that you don't pick a hidden system file by accident
 	if config.has_section('Backgrounds')==False or config.options('Backgrounds')==[]:
-		return utilFunctions.pickNestedFile('backgrounds',BAD_FILES) #random.choice(os.listdir('backgrounds'))
+		return utilFunctions.pickNestedFile('backgrounds',BAD_FILES)
 	else:
 		folderTable={}
 		for folder in config.options('Backgrounds'):
 			folderTable[folder]=config.getint('Backgrounds',folder)
 		directory=utilFunctions.weightedDictPick(utilFunctions.genProbabilityDict(folderTable))
 		return utilFunctions.pickNestedFile('backgrounds/'+directory,BAD_FILES)
-	#return result
 
 # processes the chat log for comic generation
 def processChatLog(file):

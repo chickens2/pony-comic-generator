@@ -2,21 +2,17 @@
 
 ### Publiq
 
-##### Next
+##### Tag improvements
 
-* LimeChat→input converter
-* tagging improvements
-	* More options for tagging
-	* Tag fonts & bg as well? (or at least set up the plumbing for it)
-* Maybe a couple more backgrounds
-* Ability to assign weights to different subfolders of backgrounds
+* More options for tagging
+* Tag fonts & bg as well? (or at least set up the plumbing for it)
 
-##### Font PR (later)
+##### Font PR (later, requires tagging of fonts)
 
 * Fonts for each pony
 * Programatic font assignments
 
-##### Later (once I can't think of new features)
+##### Code cleanup (once we can't think of new features)
 
 * Clean the code (bust up the monolithic functions) 
 
