@@ -5,7 +5,10 @@
 
 # A collection of utility functions that don't need to be specific to any part of the program
 
-import random,os,textwrap
+import random
+import os
+import textwrap
+import math
 from pprint import pprint
 from PIL import Image
 
@@ -74,9 +77,9 @@ def rollOdds(n):
 # give a float decimal for odds
 def rollFraction(odds):
 	if odds>1:
-		return random()<(1.0/float(odds))
+		return random.random()<(1.0/float(odds))
 	else:
-		return random()<odds
+		return random.random()<odds
 
 # generates a list of transformations to feed to PIL's im.transform()
 # nullWeight is the relative (to the size of transform_D) likelihood that you don't do any transformation for that step
@@ -183,10 +186,6 @@ def circle(draw, center, radius):
 def triangularInt(low,high,mode):
 	return int(random.triangular(low,high,mode))
 
-# Analyses a line of chat and determines whether or not to make it a /me line
-def analyseLine(line,namelist):
-	# Stub for future use
-	return
 
 # Populates a dictionary for random selection with weights from another dictionary
 # I'm really sure there's a better way to do this, but I have no idea what it would be
@@ -202,5 +201,54 @@ def genProbabilityDict(probabilityTable,outputDict=None,noneWeight=0):
 	for i in range(counter,counter+noneWeight):
 		outuptDict[i]=None
 	return outputDict
+
+
+"""
+Could also be used as part of a converter from base 10 to other bases
+
+Output is in the form of a dictonary:
+{ exponent1: coefficient1, exponent2: coefficient2, etc… }
+"""
+def decomposeNumericSwitchList(number, base, omitZero = True):
+	list = {}
+	maxpower = int(math.log(number, base))
+	for power in range(maxpower,-1,-1):
+		component = base**power
+		coefficient = number/component # integer division is important here
+		if coefficient != 0 or omitZero is False:
+			list[power] = coefficient
+		number%=component
+	return list
+
+# Decomposes a number used to represent a list of binary choices
+# Output is in the form of a list of the powers of 2 that compose the input number
+def decomposeBinarySwitches(number):
+	return uniqueSumOfPowersList(number,2)
+# 	powList = []
+# 	powers = decomposeNumericSwitchList(number, 2, True)
+# 	for power in powers.keys():
+# 		powList.append(2**power)
+# 	return powList
+
+# Output is similar to decomposeNumericSwitchList except it shows a list of "place-values" instead of exponents
+def decomposeNumericComponents(number, base):
+	componentList = {}
+
+	# The following True parameter isn't necessary, but is there to be extra-clear
+	exponentList = decomposeNumericSwitchList(number, base, True)
+
+	for exponent in exponentList.keys():
+		componentList[base**exponent] = exponentList[exponent]
+	return componentList
+
+#
+def uniqueSumOfPowersList(number, base):
+	complist = []
+	components = decomposeNumericComponents(number, base)
+	for component in components.keys():
+		complist.append(component*components[component])
+	return complist
+
+
 
 transform_D, undoTransform_D = genTransformDict()
