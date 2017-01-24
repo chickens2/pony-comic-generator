@@ -128,11 +128,18 @@ def getBackgroundImage(backgroundName,closeup=False):
 	return bg
 
 #
+#countereiorg=0
 def getCharacterImage(name1,dialog1,transpose,imheight=None):
+	global countereiorg
 	im=None
 	if name1 in names:
 		print 'getting image from manual list for '+str(name1)+" "+names[name1]
 		im=findEmote.getRandomEmote(dialog1,names[name1])
+		#countereiorg+=1
+		#print 'counter for debug '+str(countereiorg)
+		#print 'orig'
+		#im.show()
+		#raw_input("paused0")
 	else:
 		print 'getting image from procedural for '+str(name1)
 		im=findEmote.getProceduralEmote(name1,dialog1)#Image.open("flair.png").convert('RGBA')
@@ -142,11 +149,12 @@ def getCharacterImage(name1,dialog1,transpose,imheight=None):
 		imheight=charHeight#3*panelSize[1]/8
 	imheightold=imheight
 	if im.size[0]>imheight:
-		imheight=imheight*(im.size[0]/im.size[1])
-		print 'too long resizing image '+str(charHeight)+" "+str(imheightold)
+		print 'imsize '+str(imheight)+" "+str(im.size)
+		imheight=imheight*(float(im.size[0])/im.size[1])
+		print 'too long resizing image '+str(charHeight)+" "+str(imheightold)+" "+str(imheight)
 	im=im.resize(( # the max functions are to handle any bugged-out emotes
-		max(int(imheight*(float(im.size[0])/im.size[1])),1),
-		max(int(imheight),1)))
+		max(int(imheight*(float(im.size[0])/im.size[1])),10),
+		max(int(imheight),10)))
 	if transpose:
 		im=im.transpose(Image.FLIP_LEFT_RIGHT)
 	return im
@@ -233,6 +241,9 @@ def draw2CharactersAndBackground(name1,name2,dialog1,dialog2,backgroundName,clos
 	if closeup:
 		heightUsed=charHeight
 	im=getCharacterImage(name1,dialog1,True,heightUsed)
+	#print 'char image '
+	#im.show()
+	#raw_input("paused")
 	posx=25
 	posy=panelSize[1]-im.size[1]
 	if closeup:
