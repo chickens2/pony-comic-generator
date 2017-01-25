@@ -174,7 +174,7 @@ prevNames=[] # not sure what this is doing here
 def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 	global prevNames
 	dialogueOptions=[0]
-	generatePanel.setPS(panelSize)
+	generatePanel.setPS(panelSize,"generateComic:createNextPanel")
 	print 'nameorder: '+str(nameorder)
 	print 'gppanelsize '+str(generatePanel.panelSize)+" "+str(panelSize)
 	if len(txtLines)>1 and txtLines[1]['name'] != txtLines[0]['name'] and generatePanel.hasRoomForDialogue2(txtLines[0]['text'],txtLines[1]['text'] ):
