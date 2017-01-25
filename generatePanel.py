@@ -260,7 +260,7 @@ def draw2CharactersAndBackground(name1,name2,dialog1,dialog2,backgroundName,clos
 
 	im2=getCharacterImage(name2,dialog2,False,panelSize[0]/2,heightUsed)
 	posx=panelSize[0]-25-im2.size[0]
-	#posy=panelSize[1]-im2.size[1]
+	posy=panelSize[1]-im2.size[1]
 	box=(posx,posy,posx+im2.size[0],posy+im2.size[1])
 	bg.paste(im2,box,mask=im2)
 	return bg
