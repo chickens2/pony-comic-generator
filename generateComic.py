@@ -122,7 +122,7 @@ def anonymizeText(text):
 					#print 'word part '+part
 					if allNames.get(part.lower(),None) is not None:
 						#print "removing a name "+part
-						part=allNames[part][1:] # [1:] to get rid of the + in dialogue
+						part=allNames[part.lower()][1:] # [1:] to get rid of the + in dialogue
 					word+=part
 			newWords.append(word)
 		newtext=" ".join(newWords)

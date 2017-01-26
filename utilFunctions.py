@@ -72,7 +72,10 @@ def imageFlip(image):
 
 # rolls an n-sided die and lets you know if the result is 0
 def rollOdds(n):
-	return random.randint(0,n)==0
+	n = int(n) # in case you're some wiseguy who uses a non-int to get yourself an error
+	if n < 1:
+		return false # rolling a die with no sides or negative sides will return false, rather than an error (for now)
+	return random.randint(0,n-1)==0
 
 # give a float decimal for odds
 def rollFraction(odds):
@@ -179,7 +182,16 @@ def insertLineBreaks(text,maxCharsPerLine):
 
 # draw a circle
 def circle(draw, center, radius):
-	draw.ellipse((center[0] - radius + 1, center[1] - radius + 1, center[0] + radius - 1, center[1] + radius - 1), fill=(255,255,255), outline=None)
+	draw.ellipse(
+		(
+			center[0] - radius + 1,
+			center[1] - radius + 1,
+			center[0] + radius - 1,
+			center[1] + radius - 1
+		),
+		fill=(255,255,255),
+		outline=None
+	)
 
 
 # This could be replaced with a Gaussian distribution with hard limits slapped on
@@ -224,11 +236,6 @@ def decomposeNumericSwitchList(number, base, omitZero = True):
 # Output is in the form of a list of the powers of 2 that compose the input number
 def decomposeBinarySwitches(number):
 	return uniqueSumOfPowersList(number,2)
-# 	powList = []
-# 	powers = decomposeNumericSwitchList(number, 2, True)
-# 	for power in powers.keys():
-# 		powList.append(2**power)
-# 	return powList
 
 # Output is similar to decomposeNumericSwitchList except it shows a list of "place-values" instead of exponents
 def decomposeNumericComponents(number, base):
@@ -241,7 +248,7 @@ def decomposeNumericComponents(number, base):
 		componentList[base**exponent] = exponentList[exponent]
 	return componentList
 
-#
+# generic version of decomposeBinarySwitches
 def uniqueSumOfPowersList(number, base):
 	complist = []
 	components = decomposeNumericComponents(number, base)
