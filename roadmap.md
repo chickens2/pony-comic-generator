@@ -12,10 +12,13 @@
 * Fonts for each pony
 * Programatic font assignments
 
-##### Code cleanup (once we can't think of new features)
+##### Code cleanup & unscheduled work
 
 * Clean the code (bust up the monolithic functions) 
+* Strip ZNC & MOTD junk with log converter
+* Track /nick changes in-comic?
 
 ### Chickens
 
-* Windows release after Backgrounds PR?
+* ~~Windows release after Backgrounds PR?~~
+* Boxes for /me commands instead of dialogue bubbles
