@@ -156,14 +156,22 @@ def createTitlePanel(panelSize):
 	d = ImageDraw.Draw(img)
 	newh=utilFunctions.drawCenteredText(25,title,d,fntLarge,panelSize)
 	newh+=17
-	d.text((15,newh), castIntro, font=fntSmall, fill=(0,0,0,255))
-	newh+=15
+	spacing=30
+	d.text((spacing,newh), castIntro, font=fntSmall, fill=(0,0,0,255))
+	newh+=spacing
+	print 'title panel???'
 	for key,value in names.iteritems():
-		text=value
+		text=value[1:]
 		if not anonymousMode:
 			text=text+" as "+key
-		d.text((15,newh), text, font=fntSmall, fill=(0,0,0,255))
-		newh+=15
+		filepath='tagicons/'+value+'.png'
+		print 'icon filepath: '+str(filepath)
+		if os.path.isfile(filepath):
+			profile=Image.open(filepath).convert('RGBA')
+			box=(0,newh,profile.size[0],newh+profile.size[1])
+			img.paste(profile,box,mask=profile)
+		d.text((spacing+5,newh), text, font=fntSmall, fill=(0,0,0,255))
+		newh+=spacing
 	generatePanel.drawBorder(img)
 	return img#img.show()
 

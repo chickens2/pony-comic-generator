@@ -244,13 +244,15 @@ def draw2CharactersAndBackground(name1,name2,dialog1,dialog2,backgroundName,clos
 	bg=getBackgroundImage(backgroundName,closeup)
 	im=None
 	heightUsed=charHeight#farCharHeight
+	padding=25
 	if closeup:
 		heightUsed=charHeightCloseup#charHeight
-	im=getCharacterImage(name1,dialog1,True,panelSize[0]/2,heightUsed)
+	im=getCharacterImage(name1,dialog1,True,(panelSize[0]-2*padding)/2,heightUsed)
 	#print 'char image '
 	#im.show()
 	#raw_input("paused")
-	posx=25
+	
+	posx=padding
 	posy=panelSize[1]-im.size[1]
 	if closeup:
 		posy=panelSize[1]-charHeight#
@@ -258,8 +260,8 @@ def draw2CharactersAndBackground(name1,name2,dialog1,dialog2,backgroundName,clos
 	bg.paste(im,box,mask=im)
 
 
-	im2=getCharacterImage(name2,dialog2,False,panelSize[0]/2,heightUsed)
-	posx=panelSize[0]-25-im2.size[0]
+	im2=getCharacterImage(name2,dialog2,False,(panelSize[0]-2*padding)/2,heightUsed)
+	posx=panelSize[0]-padding-im2.size[0]
 	posy=panelSize[1]-im2.size[1]
 	box=(posx,posy,posx+im2.size[0],posy+im2.size[1])
 	bg.paste(im2,box,mask=im2)
