@@ -20,8 +20,9 @@ charHeightCloseup=None#charHeight*closeupMultiplier
 names={}#should mirror generatecomic name dictionary
 
 # set the panel size from another module
-def setPS(ps):
+def setPS(ps,info):
 	global panelSize
+	print 'panelsize changed from '+str(panelSize)+" to "+str(ps)+" by "+str(info)
 	panelSize=ps
 	return ps
 
@@ -128,25 +129,35 @@ def getBackgroundImage(backgroundName,closeup=False):
 	return bg
 
 #
-def getCharacterImage(name1,dialog1,transpose,imheight=None):
+#countereiorg=0
+def getCharacterImage(name1,dialog1,transpose,imMaxLength,imheight=None):
+	global countereiorg
 	im=None
 	if name1 in names:
 		print 'getting image from manual list for '+str(name1)+" "+names[name1]
 		im=findEmote.getRandomEmote(dialog1,names[name1])
+		#countereiorg+=1
+		#print 'counter for debug '+str(countereiorg)
+		#print 'orig'
+		#im.show()
+		#raw_input("paused0")
 	else:
 		print 'getting image from procedural for '+str(name1)
 		im=findEmote.getProceduralEmote(name1,dialog1)#Image.open("flair.png").convert('RGBA')
 	im.thumbnail(characterMaxSize)
 	#print 'gci imheight '+str(imheight)
-	if imheight is None:
-		imheight=charHeight#3*panelSize[1]/8
-	imheightold=imheight
-	if im.size[0]>imheight:
-		imheight=imheight*(im.size[0]/im.size[1])
-		print 'too long resizing image '+str(charHeight)+" "+str(imheightold)
-	im=im.resize(( # the max functions are to handle any bugged-out emotes
-		max(int(imheight*(float(im.size[0])/im.size[1])),1),
-		max(int(imheight),1)))
+	# if imheight is None:
+		# imheight=charHeight#3*panelSize[1]/8
+	# imheightold=imheight
+	# if im.size[0]>imheight:
+		# print 'imsize '+str(imheight)+" "+str(im.size)
+		# imheight=imheight*(float(im.size[0])/im.size[1])
+		# print 'too long resizing image '+str(charHeight)+" "+str(imheightold)+" "+str(imheight)
+	# im=im.resize(( # the max functions are to handle any bugged-out emotes
+		# max(int(imheight*(float(im.size[0])/im.size[1])),10),
+		# max(int(imheight),10)))
+	if im.size[0]>imMaxLength:
+		im=im.resize((imMaxLength,int(im.size[1]*float(imMaxLength)/im.size[0])))
 	if transpose:
 		im=im.transpose(Image.FLIP_LEFT_RIGHT)
 	return im
@@ -185,29 +196,32 @@ def getBubbleLength():
 
 # doesn't zoom in on characters when closeup to help them fit
 def draw3CharactersAndBackground(name1,name2,name3,dialog1,dialog2,dialog3,backgroundName,closeup=True):
+	print 'drawing 3 characters and background, panelsize:'+str(panelSize)
 	bg=getBackgroundImage(backgroundName,closeup)
 	im=None
 	heightUsed=farCharHeight
-	if closeup and charHeightCloseup is not None:
-		heightUsed=charHeightCloseup
-	im=getCharacterImage(name1,dialog1,True,heightUsed)
+	if closeup:# and charHeightCloseup is not None:
+		heightUsed=charHeight#charHeightCloseup
+	im=getCharacterImage(name1,dialog1,True,panelSize[0]/3,heightUsed)
 	posx=5
 	posy=panelSize[1]-im.size[1]
-	if closeup:
-		posy=panelSize[1]-heightUsed#int(heightUsed/closeupMultiplier)#charHeight#
+	#if closeup:
+		#posy=panelSize[1]-heightUsed#int(heightUsed/closeupMultiplier)#charHeight#
 	box=(posx,posy,posx+im.size[0],posy+im.size[1])
 	bg.paste(im,box,mask=im)
 
-	im2=getCharacterImage(name2,dialog2,False,heightUsed)
-	posx=panelSize[0]-5-im2.size[0]
-	#posy=panelSize[1]-im2.size[1]
+	im2=getCharacterImage(name2,dialog2,False,panelSize[0]/3,heightUsed)
+	posx=panelSize[0]-panelSize[0]/3
+	posy=panelSize[1]-im2.size[1]
 	box=(posx,posy,posx+im2.size[0],posy+im2.size[1])
+	print '3char box2:'+str(box)
 	bg.paste(im2,box,mask=im2)
 
-	im3=getCharacterImage(name3,dialog3,False,heightUsed)
-	posx=panelSize[0]/2-im2.size[0]/2
-	#posy=panelSize[1]-im2.size[1]
+	im3=getCharacterImage(name3,dialog3,False,panelSize[0]/3,heightUsed)
+	posx=panelSize[0]-2*panelSize[0]/3
+	posy=panelSize[1]-im3.size[1]
 	box=(posx,posy,posx+im3.size[0],posy+im3.size[1])
+	print '3char box3:'+str(box)
 	bg.paste(im3,box,mask=im3)
 
 	return bg
@@ -229,11 +243,16 @@ def putCharactersOnBackground(list,backgroundName,closeup=True):
 def draw2CharactersAndBackground(name1,name2,dialog1,dialog2,backgroundName,closeup=True):
 	bg=getBackgroundImage(backgroundName,closeup)
 	im=None
-	heightUsed=farCharHeight
+	heightUsed=charHeight#farCharHeight
+	padding=25
 	if closeup:
-		heightUsed=charHeight
-	im=getCharacterImage(name1,dialog1,True,heightUsed)
-	posx=25
+		heightUsed=charHeightCloseup#charHeight
+	im=getCharacterImage(name1,dialog1,True,(panelSize[0]-2*padding)/2,heightUsed)
+	#print 'char image '
+	#im.show()
+	#raw_input("paused")
+	
+	posx=padding
 	posy=panelSize[1]-im.size[1]
 	if closeup:
 		posy=panelSize[1]-charHeight#
@@ -241,24 +260,25 @@ def draw2CharactersAndBackground(name1,name2,dialog1,dialog2,backgroundName,clos
 	bg.paste(im,box,mask=im)
 
 
-	im2=getCharacterImage(name2,dialog2,False,heightUsed)
-	posx=panelSize[0]-25-im2.size[0]
-	#posy=panelSize[1]-im2.size[1]
+	im2=getCharacterImage(name2,dialog2,False,(panelSize[0]-2*padding)/2,heightUsed)
+	posx=panelSize[0]-padding-im2.size[0]
+	posy=panelSize[1]-im2.size[1]
 	box=(posx,posy,posx+im2.size[0],posy+im2.size[1])
 	bg.paste(im2,box,mask=im2)
 	return bg
 
 #
 def draw1CharacterAndBackground(name1,dialog1,backgroundName,closeup=True):
+	print 'drawing 1 character and background, closeup is '+str(closeup)
 	bg=getBackgroundImage(backgroundName,closeup)
-	heightUsed=farCharHeight
+	heightUsed=charHeight#farCharHeight
 	if closeup:
-		heightUsed=charHeight
+		heightUsed=charHeightCloseup#charHeight
 	im=getCharacterImage(name1,dialog1,True,heightUsed)
 	posx=panelSize[0]/2-im.size[0]/2
 	posy=panelSize[1]-im.size[1]
-	if closeup:
-		posy=panelSize[1]-charHeight#
+	#if closeup:
+	#	posy=panelSize[1]-charHeight#
 	box=(posx,posy,posx+im.size[0],posy+im.size[1])
 	bg.paste(im,box,mask=im)
 	return bg
