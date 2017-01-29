@@ -5,7 +5,10 @@
 
 # A collection of utility functions that don't need to be specific to any part of the program
 
-import random,os,textwrap
+import random
+import os
+import textwrap
+import math
 from pprint import pprint
 from PIL import Image
 
@@ -69,14 +72,17 @@ def imageFlip(image):
 
 # rolls an n-sided die and lets you know if the result is 0
 def rollOdds(n):
-	return random.randint(0,n)==0
+	n = int(n) # in case you're some wiseguy who uses a non-int to get yourself an error
+	if n < 1:
+		return false # rolling a die with no sides or negative sides will return false, rather than an error (for now)
+	return random.randint(0,n-1)==0
 
 # give a float decimal for odds
 def rollFraction(odds):
 	if odds>1:
-		return random()<(1.0/float(odds))
+		return random.random()<(1.0/float(odds))
 	else:
-		return random()<odds
+		return random.random()<odds
 
 # generates a list of transformations to feed to PIL's im.transform()
 # nullWeight is the relative (to the size of transform_D) likelihood that you don't do any transformation for that step
@@ -122,10 +128,13 @@ def getTransform(allowNothing=None):
 def weightedDictPick(weightedDict,increasedNoneWeight=0):
 	return weightedDict.get(random.randint(0,len(weightedDict.keys())+increasedNoneWeight),None)
 
-# Generates the dicts that contain transforms that can be used with PIL's .transpose function
-# flip and rotate are relative odds as to which variety of transformation is chosen…
-# …if you're curious about the odds of *any* rotation or *any* reflection, there are 3 rotations and 2 flips
-# Using the mappings found in PIL/image.py for transformations (that's what's with the numbers)
+'''
+Generates the dicts that contain transforms that can be used with PIL's transpose function.
+Flip and rotate are relative odds as to which variety of transformation is chosen:
+if you're curious about the odds of *any* rotation or *any* reflection, there are 3 rotations and 2 flips.
+
+The commented numbers are the mappings found in PIL/image.py
+'''
 def genTransformDict(flip=10,rotate=20):
 	undoTransform_D={
 		'Image.FLIP_LEFT_RIGHT': 'Image.FLIP_LEFT_RIGHT', #0:0
@@ -173,17 +182,22 @@ def insertLineBreaks(text,maxCharsPerLine):
 
 # draw a circle
 def circle(draw, center, radius):
-	draw.ellipse((center[0] - radius + 1, center[1] - radius + 1, center[0] + radius - 1, center[1] + radius - 1), fill=(255,255,255), outline=None)
+	draw.ellipse(
+		(
+			center[0] - radius + 1,
+			center[1] - radius + 1,
+			center[0] + radius - 1,
+			center[1] + radius - 1
+		),
+		fill=(255,255,255),
+		outline=None
+	)
 
 
 # This could be replaced with a Gaussian distribution with hard limits slapped on
 def triangularInt(low,high,mode):
 	return int(random.triangular(low,high,mode))
 
-# Analyses a line of chat and determines whether or not to make it a /me line
-def analyseLine(line,namelist):
-	# Stub for future use
-	return
 
 # Populates a dictionary for random selection with weights from another dictionary
 # I'm really sure there's a better way to do this, but I have no idea what it would be
@@ -199,5 +213,49 @@ def genProbabilityDict(probabilityTable,outputDict=None,noneWeight=0):
 	for i in range(counter,counter+noneWeight):
 		outuptDict[i]=None
 	return outputDict
+
+
+"""
+Could also be used as part of a converter from base 10 to other bases
+
+Output is in the form of a dictonary:
+{ exponent1: coefficient1, exponent2: coefficient2, etc… }
+"""
+def decomposeNumericSwitchList(number, base, omitZero = True):
+	list = {}
+	maxpower = int(math.log(number, base))
+	for power in range(maxpower,-1,-1):
+		component = base**power
+		coefficient = number/component # integer division is important here
+		if coefficient != 0 or omitZero is False:
+			list[power] = coefficient
+		number%=component
+	return list
+
+# Decomposes a number used to represent a list of binary choices
+# Output is in the form of a list of the powers of 2 that compose the input number
+def decomposeBinarySwitches(number):
+	return uniqueSumOfPowersList(number,2)
+
+# Output is similar to decomposeNumericSwitchList except it shows a list of "place-values" instead of exponents
+def decomposeNumericComponents(number, base):
+	componentList = {}
+
+	# The following True parameter isn't necessary, but is there to be extra-clear
+	exponentList = decomposeNumericSwitchList(number, base, True)
+
+	for exponent in exponentList.keys():
+		componentList[base**exponent] = exponentList[exponent]
+	return componentList
+
+# generic version of decomposeBinarySwitches
+def uniqueSumOfPowersList(number, base):
+	complist = []
+	components = decomposeNumericComponents(number, base)
+	for component in components.keys():
+		complist.append(component*components[component])
+	return complist
+
+
 
 transform_D, undoTransform_D = genTransformDict()
