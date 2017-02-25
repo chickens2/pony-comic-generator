@@ -74,7 +74,6 @@ for key in emotesByPony.keys():
 def getProceduralPony(seed):
 	random.seed(seed)
 	pony=random.choice(emotesByPony.keys())
-	random.seed()
 	return pony
 
 #
