@@ -269,6 +269,7 @@ def processChatLog(file):
 	currentName=None
 	currentInARow=1
 	nameOrder=[]
+	ponylist=[]
 	for line in file:
 		#if 'Raribot' in line or '> ~' in line:
 		#	continue
@@ -288,13 +289,22 @@ def processChatLog(file):
 		pony=None
 		if name not in allNames:
 			print 'name '+str(name)+' not in allnames'
-			pony=findEmote.getProceduralPony(name)
-			names[name]=pony
-			allNames[name]=pony
+			horse_increment = 1
+			while horse_increment != -2:
+				pony=findEmote.getProceduralPony(name*horse_increment)
+				if pony not in ponylist:
+					names[name]=pony
+					allNames[name]=pony
+					ponylist.append(pony)
+					horse_increment = -2
+				else:
+					horse_increment = horse_increment + 1
+					print 'pony '+pony+' is already in use; picking a new horse'
 		else:
 			print 'name '+str(name)+' was in allnames'
 			names[name]=allNames[name]
 			pony=names[name]
+			ponylist.append(pony)
 		print 'name: '+name
 		line=line[line.index('>')+2:]
 		lines.append({"pony":pony,"name":name,"text":line})
