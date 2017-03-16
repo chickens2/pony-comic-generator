@@ -350,7 +350,7 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None):
 	else: #otherwise redo the first panel as zoomed out
 		txtLines2=list(lines)
 		del panels[1]
-		panels.insert(1,createNextPanel(txtLines2,panelSize,smallPanels,nameOrder,closeup=False))
+		panels.insert(1,createNextPanel(txtLines2,panelSize,smallPanels,nameOrder,selectedBackground,closeup=False))
 
 	#if there still aren't enough panels, pad the end
 	while len(panels)%panelsAcross!=0 and names!={}:

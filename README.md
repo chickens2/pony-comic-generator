@@ -30,6 +30,7 @@ When run from the command line you can specify a file containing IRC text instea
 * `closeup_zoom` affects both the characters and the background
 * In the Backgrounds section of the config file, you may use subfolders, such as `Custom/Test12`.  Put all the backgrounds that you like into the custom folder if you don't want them to be committed back to the repository.
 * If you are having problems with "Not a real JPEG" on symlinked files, make sure they are real soft links and not Mac aliases.  [This automator workflow](http://blog.poynton.ca/?p=281) lets you select all your aliased files in Finder and then batch-convert them in a right-click menu.
+* `generateComic.py` is the driver for the comic generation, the actual heavy lifting is done in `makeComic.py`
 
 ## [Future Plans](./roadmap.md)
 
