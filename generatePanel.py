@@ -85,6 +85,7 @@ def drawText(image,text,box,arroworientation,color=None):
 # gets the background image for a panel
 # the background is chosen in selectBackground, which is called by processChatLog (both in generateComic.py)
 def getBackgroundImage(backgroundName,closeup=False):
+	#print "Background image "+backgroundName
 	bg=Image.open(backgroundName).convert('RGBA')
 	stretch=config.get('Options','squish_image').upper()=='TRUE'
 
@@ -251,7 +252,7 @@ def draw2CharactersAndBackground(name1,name2,dialog1,dialog2,backgroundName,clos
 	#print 'char image '
 	#im.show()
 	#raw_input("paused")
-	
+
 	posx=padding
 	posy=panelSize[1]-im.size[1]
 	if closeup:

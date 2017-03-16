@@ -54,8 +54,9 @@ def pickNestedFile(directory,bad_files):
 	while file is None or file in bad_files:
 		file=random.choice(os.listdir(directory))
 	#file=directory+file # use the full path name
-	print "Trying file "+file+" to use as the background"
+	print "Trying "+file
 	if os.path.isdir(os.path.join(directory,file))==True:
+		print "It's a directory!"
 		return pickNestedFile(directory+"/"+file,bad_files)
 	else:
 		return directory+"/"+file
@@ -256,6 +257,20 @@ def uniqueSumOfPowersList(number, base):
 		complist.append(component*components[component])
 	return complist
 
+# check for joined/quit messaegs and remove them
+def quitline(line):
+	quitmessage = [
+		'(Quit:',
+		'has joined (',
+		'has left IRC (',
+		'has changed mode:',
+		'You have joined',
+		'set the topic'
+	]
+	for msg in quitmessage:
+		if msg in line:
+			return True
+	return False
 
 
 transform_D, undoTransform_D = genTransformDict()

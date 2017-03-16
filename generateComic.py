@@ -13,7 +13,6 @@ import re
 import pyperclip
 import StringIO
 import ConfigParser
-from imgurpython import ImgurClient
 import praw
 import sys
 import urllib
@@ -25,24 +24,7 @@ import utilFunctions
 import string
 
 
-#command line options
-textFileChat=None
-specifiedBackground=None
-specifiedTitle=None
-nextToFill=None
-for arg in sys.argv:
-	if arg[0]=='-':
-		nextToFill=arg[1:].lower()
-	else:
-		if nextToFill is not None:
-			if nextToFill[0]=='f':
-				textFileChat=arg
-			if nextToFill[0]=='b':
-				specifiedBackground=arg
-			if nextToFill[0]=='t':
-				specifiedTitle=arg
-		nextToFill=None
-print 'chat from log: '+str(textFileChat)
+
 
 #direct print output to log file
 class Logger(object):
@@ -57,12 +39,13 @@ class Logger(object):
 sys.stdout = Logger()
 
 
-imgareio = '174becf08a64efc'
-imgscrioertu = 'c47422a4a3a7a4aab366b88634bcc03a0ffcaa60'
-client = ImgurClient(imgareio, imgscrioertu)
+
 
 try:
-	urllib.urlretrieve('https://raw.githubusercontent.com/chickens2/pony-comic-generator/master/DEFAULT_ALIAS_DO_NOT_EDIT.cfg','DEFAULT_ALIAS_DO_NOT_EDIT.cfg')
+	urllib.urlretrieve(
+		'https://raw.githubusercontent.com/chickens2/pony-comic-generator/master/DEFAULT_ALIAS_DO_NOT_EDIT.cfg',
+		'DEFAULT_ALIAS_DO_NOT_EDIT.cfg'
+	)
 except:
 	print 'could not retrieve default alias list, using local version'
 config2 = ConfigParser.ConfigParser()
@@ -94,17 +77,6 @@ castIntro=config.get('Options','cast_introduction')
 repeatMode=config.get('Options','keep_window_open').upper()=='TRUE'
 closeupMultiplier = config.getfloat('Options','closeup_zoom')
 
-uploadReddit=None
-reddit = None
-if config.has_section('praw') and len(config.get('praw','clientid'))>2:
-	#print 'praw stuff:'+config.get('praw','clientid')+"^"
-	uploadReddit=config.get('praw','upload')
-	reddit = praw.Reddit(client_id=config.get('praw','clientid'),
-					client_secret=config.get('praw','clientsecret'),
-					user_agent='user agent',
-					username=config.get('praw','username'),
-					password=config.get('praw','password'))
-	print 'reddit credentials:'+str(config.get('praw','clientsecret'))+" "+config.get('praw','clientid')
 
 # Replace all mentions of nicks with their corresponding pony names
 def anonymizeText(text):
@@ -129,7 +101,7 @@ def anonymizeText(text):
 	return newtext
 
 # Pick a title for the strip
-def getTitle():
+def getTitle(specifiedTitle=None):
 	if specifiedTitle is not None:
 		return specifiedTitle
 	random.seed(allText)
@@ -184,7 +156,7 @@ def createTitlePanel(panelSize):
 prevNames=[] # not sure what this is doing here
 
 #
-def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
+def createNextPanel(txtLines, panelSize, smallPanels, nameorder, selectedBackground, closeup=True):
 	global prevNames
 	dialogueOptions=[0]
 	generatePanel.setPS(panelSize,"generateComic:createNextPanel")
@@ -238,12 +210,12 @@ def createNextPanel(txtLines,panelSize,smallPanels,nameorder,closeup=True):
 	return panel
 
 # selects which background image to use
-def selectBackground(seed):
+def selectBackground(seed, specifiedBackground=None):
 	random.seed(seed)
 	if specifiedBackground is not None: # let command-line switches specify a background
+		print "Using pre-selected background"
 		return specifiedBackground
 	BAD_FILES=config.get('Ignore','banned_backgrounds').split()
-	result=None
 	if config.has_section('Backgrounds')==False or config.options('Backgrounds')==[]:
 		return utilFunctions.pickNestedFile('backgrounds',BAD_FILES)
 	else:
@@ -269,8 +241,7 @@ def quitline(line):
 	return False
 
 # processes the chat log for comic generation
-def processChatLog(file):
-	global selectedBackground
+def processChatLog(file, specifiedBackground=None, specifiedTitle=None):
 	global lines
 	global allNames
 	global transform_D
@@ -346,7 +317,8 @@ def processChatLog(file):
 	#print 'lines:'
 	#pprint(lines)
 	#return
-	selectedBackground=selectBackground(text)
+	selectedBackground=selectBackground(text, specifiedBackground)
+	print "Background is "+selectedBackground
 	#pprint(names)
 	global allText
 	allText=text
@@ -365,7 +337,7 @@ def processChatLog(file):
 	panels.append(tp)
 	txtLines=list(lines)
 	while len(txtLines)>0:
-		panels.append(createNextPanel(txtLines,panelSize,smallPanels,nameOrder))
+		panels.append(createNextPanel(txtLines,panelSize,smallPanels,nameOrder,selectedBackground))
 	panelsAcross=2
 	if smallPanels:
 		panelsAcross=3
@@ -407,24 +379,3 @@ def processChatLog(file):
 
 
 
-chatfile=None
-if textFileChat is None:
-	clipboard=pyperclip.paste().encode('utf8')
-	print 'clipboard is: \n'+str(clipboard)
-	chatfile=StringIO.StringIO(clipboard)
-	random.seed(clipboard)
-else:
-	chatfile=open(textFileChat).readlines()
-	random.seed(open(textFileChat))
-processChatLog(chatfile)#open('exampleChat12.txt','r'))
-if uploadImgur:
-	image=client.upload_from_path('comic.jpg')
-	pyperclip.copy(image['link'])
-	print image['link']
-	if uploadReddit:
-		thetitle=getTitle()
-		print 'title '+thetitle+" link "+image['link']
-		reddit.subreddit("beniscity").submit(title=thetitle,url=image['link'])
-if repeatMode:
-	print 'press any key to continue'
-	g=getch()()
