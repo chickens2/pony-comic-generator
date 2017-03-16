@@ -253,6 +253,21 @@ def selectBackground(seed):
 		directory=utilFunctions.weightedDictPick(utilFunctions.genProbabilityDict(folderTable))
 		return utilFunctions.pickNestedFile('backgrounds/'+directory,BAD_FILES)
 
+# check for joined/quit messaegs and remove them
+def quitline(line):
+	quitmessage = [
+		'(Quit:',
+		'has joined (',
+		'has left IRC (',
+		'has changed mode:',
+		'You have joined',
+		'set the topic'
+	]
+	for msg in quitmessage:
+		if msg in line:
+			return True
+	return False
+
 # processes the chat log for comic generation
 def processChatLog(file):
 	global selectedBackground
@@ -277,7 +292,7 @@ def processChatLog(file):
 		line=line.strip('\n')
 		text+=line
 		print 'line:'+line
-		if line[:2]=="* " and '(Quit:' not in line and ' has joined' not in line:
+		if line[:2]=="* " and quitline(line) is False:
 			line=line[2:]
 			line='<'+line[:line.index(' ')]+'> *'+line[line.index(' ')+1:]+'*'
 			print 'new line '+line
