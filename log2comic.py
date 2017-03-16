@@ -16,6 +16,7 @@ import utilFunctions
 import string
 import random
 from makeComic import processChatLog
+from lime2input import convertLimelog
 
 # handle the command line options
 nextToFill= None # iterator
@@ -32,8 +33,8 @@ for arg in sys.argv:
 		if nextToFill is not None:
 			if nextToFill[0] == 'i':
 				inputfolder = arg
-			if nextToFill[0] == 'o':
-				outputLog = arg
+			if nextToFill[0] == 'm':
+				inputfolder = arg
 				needlime = True
 			if nextToFill[0] == 'l':
 				forcelines = int(arg)
@@ -43,9 +44,6 @@ for arg in sys.argv:
 				bigseed = arg
 				forceseed = True
 		nextToFill = None
-if needlime and outputLog is None:
-	print "Must specify folder for converted file"
-	sys.exit(3)
 if inputfolder is None:
 	print "Need to know where the chatlogs are"
 	sys.exit(1)
@@ -107,7 +105,9 @@ if needlime is True:
 
 # Pick a line
 content = open(inlog).readlines()
-start = random.randint(0,len(content)-1)
+if needlime:
+	content = convertLimelog(content, 46)
+start = random.randint(0, len(content)-1)
 print "Starting at line #"+str(start)
 
 # Run with it
@@ -117,6 +117,9 @@ while length > 0:
 		selectedlines.append(content[start])
 		length -= 1
 	start += 1
+	if start > len(content)-1:
+		length = 0
+		# implement going to the next available file at a later moment
 
 
 print selectedlines

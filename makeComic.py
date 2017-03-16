@@ -63,8 +63,8 @@ allNames2={}
 for key in allNames.keys():
 	allNames2[key.lower()]=allNames[key].lower()
 allNames=allNames2
-print 'final alias list: '
-pprint(allNames)
+#print 'final alias list: '
+#pprint(allNames)
 names={}
 
 # Load things from the config file

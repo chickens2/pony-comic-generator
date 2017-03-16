@@ -239,19 +239,22 @@ def assembleNormalLine(name, messagewords):
 Return to the imperative part of the program from here on
 """
 
-chatfile = None
-if limeLog is None:
-	clipboard = pyperclip.paste().encode('utf8')
-	chatfile = StringIO.StringIO(clipboard)
-else:
-	chatfile = open(limeLog).readlines()
+def main():
+	chatfile = None
+	if limeLog is None:
+		clipboard = pyperclip.paste().encode('utf8')
+		chatfile = StringIO.StringIO(clipboard)
+	else:
+		chatfile = open(limeLog).readlines()
 
+	newlog = convertLimelog(chatfile, guessstrat)
 
-newlog = convertLimelog(chatfile, guessstrat)
+	if outputLog is None:
+		pyperclip.copy("".join(newlog))
+	else:
+		file = open(outputLog, 'w')
+		file.writelines(newlog)
+		file.close()
 
-if outputLog is None:
-	pyperclip.copy("".join(newlog))
-else:
-	file = open(outputLog, 'w')
-	file.writelines(newlog)
-	file.close()
+if __name__ == "__main__":
+	main()
