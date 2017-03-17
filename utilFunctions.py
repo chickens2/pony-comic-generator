@@ -49,15 +49,15 @@ def isCorrectOrder(txtLine1,txtLine2,nameorder):
 # picks a file from a directory
 # if the file is also a directory, pick a file from the new directory
 # this might choke up if it encounters a directory only containing invalid files
-def pickNestedFile(directory,bad_files):
+def pickNestedFile(directory, bad_files):
 	file=None
 	while file is None or file in bad_files:
 		file=random.choice(os.listdir(directory))
 	#file=directory+file # use the full path name
 	print "Trying "+file
-	if os.path.isdir(os.path.join(directory,file))==True:
+	if os.path.isdir(os.path.join(directory, file))==True:
 		print "It's a directory!"
-		return pickNestedFile(directory+"/"+file,bad_files)
+		return pickNestedFile(directory+"/"+file, bad_files)
 	else:
 		return directory+"/"+file
 
@@ -271,6 +271,20 @@ def quitline(line):
 		if msg in line:
 			return True
 	return False
+
+# similar to pickNestedFile but returns a directory, the directory list, and an index
+# assumes that at least one good file exists within the deepest subdirectory
+def pickfileIndex(inputfolder, bad_files):
+	file=None
+	directoryList = os.listdir(inputfolder)
+	while file is None or file in bad_files:
+		location = random.randint(0, len(directoryList)-1)
+		file = directoryList[location]
+	if os.path.isdir(os.path.join(inputfolder, file)) is True:
+		return pickfileIndex(inputfolder+'/'+file, bad_files)
+	else:
+		return inputfolder, directoryList, location
+
 
 
 transform_D, undoTransform_D = genTransformDict()

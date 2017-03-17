@@ -18,6 +18,18 @@ import random
 from makeComic import processChatLog
 from lime2input import convertLimelog
 
+"""
+Command-line options:
+
+-i input folder for "normal"-format logs
+-m input folder for logs stored in the LimeChat format
+-l force a specific length of dialogue
+-s set the intial seed
+-b use the seed for the seed in as many places as possible
+
+Either -i or -m is required; behavior is not defined if you use both
+"""
+
 # handle the command line options
 nextToFill= None # iterator
 inputfolder = None # input log folder
@@ -66,9 +78,12 @@ def picklines(seed=None):
 		return 2;
 	return 1;
 
-def pickfile(inputfolder):
-	return 0;
-
+# Pick a line
+def getcontent(logspot, needlime = False):
+	content = open(logspot).readlines()
+	if needlime:
+		content = convertLimelog(content, 46)
+	return content
 
 
 
@@ -92,21 +107,14 @@ else:
 print "Choosing "+str(length)+" lines"
 
 # Pick a file
-inlog = utilFunctions.pickNestedFile(inputfolder,
-	    ['.trashes', '.DS_Store', 'thumbs.db'])
-fname = inlog.split('/')[-1]
-path = "/".join(inlog.split('/')[:-1])
-print "Path to file "+inlog
-print "Name of file "+fname
-print "Parent directory "+path
+
+badfiles = ['.trashes', '.DS_Store', 'thumbs.db']
+inputfolder, filelist, logloc = utilFunctions.pickfileIndex(inputfolder, badfiles)
+print "Starting at index "+str(logloc)+" of "+str(filelist)+" from "+inputfolder
 if needlime is True:
 	print "TAKING A MOMENT TO CONVERT"
 
-
-# Pick a line
-content = open(inlog).readlines()
-if needlime:
-	content = convertLimelog(content, 46)
+content = getcontent(inputfolder+'/'+filelist[logloc], needlime)
 start = random.randint(0, len(content)-1)
 print "Starting at line #"+str(start)
 
@@ -117,9 +125,31 @@ while length > 0:
 		selectedlines.append(content[start])
 		length -= 1
 	start += 1
-	if start > len(content)-1:
-		length = 0
-		# implement going to the next available file at a later moment
+	# move to the next log if you're at the end
+	if start == len(content):
+		start = 0
+		found = False
+		print "Found end of file, trying for the next log"
+		while found is False:
+			logloc += 1
+			# if you've reached the end of the folder, stop processing files
+			if logloc == len(filelist):
+				length = 0
+				print "Reached end of directory: stopping here"
+				break
+			# skip the junk files
+			nextfile = filelist[logloc]
+			if nextfile in badfiles:
+				print "Skipping junk file "+nextfile
+				continue
+			# skip any directories
+			if os.path.isdir(os.path.join(inputfolder, nextfile)) is True:
+				print "Skipping directory "+nextfile
+				continue
+			content = getcontent(inputfolder+'/'+filelist[logloc], needlime)
+			print "Continuing with "+nextfile
+			found = True
+
 
 
 print selectedlines
