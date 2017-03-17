@@ -272,6 +272,48 @@ def quitline(line):
 			return True
 	return False
 
+# checks if a line is just some URL
+def soloURL(line):
+	webendings = [
+		'com',
+		'net',
+		'org',
+		'bat',
+		'gif',
+		'png',
+		'jpg',
+		'bmp',
+		'htm',
+		'asp',
+		'gov',
+		'mil',
+		'mp4',
+		'mp3',
+		'm4v',
+		'mkv',
+		'.uk',
+		'.co',
+		'.tk',
+		'.pw',
+		'.es',
+		'.us',
+		'.py',
+		'.pl',
+		'.nl',
+		'.ru',
+		'.fr',
+		'.ca'
+	]
+	if len(line.split(" ")) > 1:
+		return False
+	if len(line) < 11:
+		return False
+	if line[:4].lower() == "http":
+		return True
+	if line[-3:].lower() in webendings:
+		return True
+	return True
+
 # similar to pickNestedFile but returns a directory, the directory list, and an index
 # assumes that at least one good file exists within the deepest subdirectory
 def pickfileIndex(inputfolder, bad_files):

@@ -71,7 +71,7 @@ if forcelines < 1:
 def picklines(seed=None):
 	if seed is not None:
 		random.seed(seed)
-	lines =  int(random.gauss(5,4))
+	lines =  int(random.gauss(6.022,4.54))
 	if lines > 0:
 		return lines
 	if lines%2 == 0:
@@ -121,8 +121,9 @@ print "Starting at line #"+str(start)
 # Run with it
 selectedlines = []
 while length > 0:
-	if utilFunctions.quitline(content[start]) is False:
-		selectedlines.append(content[start])
+	line = content[start]
+	if utilFunctions.quitline(line) is False and utilFunctions.soloURL(' '.join(line.split(' ')[1:])) is False:
+		selectedlines.append(line)
 		length -= 1
 	start += 1
 	# move to the next log if you're at the end
