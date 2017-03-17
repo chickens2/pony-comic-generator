@@ -74,9 +74,7 @@ def picklines(seed=None):
 	lines =  int(random.gauss(6.022,4.54))
 	if lines > 0:
 		return lines
-	if lines%2 == 0:
-		return 2;
-	return 1;
+	return lines%3+1
 
 # Pick a line
 def getcontent(logspot, needlime = False):
