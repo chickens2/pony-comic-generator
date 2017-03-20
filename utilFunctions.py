@@ -111,23 +111,29 @@ def possiblyTransform(image,odds,length=2):
 # does the opposite transpositions as applyTranformList
 # if these two functions are called immediately after one another, the original image should be returned
 # have to go in reverse order for it to work consistently
-def undoTransformList(list,image):
-	undoList=[]
+def undoTransformList(list, image):
+	undoList = []
 	for transformation in list:
 		if transformation is not None:
-			undoList.insert(0,undoTransform_D[transformation])
-	return applyTransformList(undoList,image)
+			undoList.insert(0, undoTransform_D[transformation])
+	return applyTransformList(undoList, image)
 
 # picks which transformation will be applied to the image
 # really just a wrapper for weightedDictPick that always uses transform_D
 def getTransform(allowNothing=None):
-	return weightedDictPick(transform_D,int(allowNothing))
+	return weightedDictPick(transform_D, int(allowNothing))
 
 # formerly the guts of getTranform, back when that was part of generatePanel.py
 # Picks from a weighted probability dictionary
 # oh yeah, it's a one-liner
-def weightedDictPick(weightedDict,increasedNoneWeight=0):
-	return weightedDict.get(random.randint(0,len(weightedDict.keys())+increasedNoneWeight),None)
+def weightedDictPick(weightedDict, increasedNoneWeight=0):
+	return weightedDict.get(
+		random.randint(
+			1,
+			len(weightedDict.keys()) + increasedNoneWeight
+			) - 1,
+		None
+		)
 
 '''
 Generates the dicts that contain transforms that can be used with PIL's transpose function.
@@ -202,17 +208,17 @@ def triangularInt(low,high,mode):
 
 # Populates a dictionary for random selection with weights from another dictionary
 # I'm really sure there's a better way to do this, but I have no idea what it would be
-def genProbabilityDict(probabilityTable,outputDict=None,noneWeight=0):
+def genProbabilityDict(probabilityTable, outputDict=None, noneWeight=0):
 	if outputDict is None:
-		outputDict={}
-	counter=0
+		outputDict = {}
+	counter = 0
 	for entry in probabilityTable:
-		weight=int(probabilityTable[entry])
-		for i in range(counter,counter+weight):
-			outputDict[i]=entry
-		counter+=weight
-	for i in range(counter,counter+noneWeight):
-		outuptDict[i]=None
+		weight = int(probabilityTable[entry])
+		for i in range(counter, counter+weight):
+			outputDict[i] = entry
+		counter += weight
+	for i in range(counter, counter + noneWeight):
+		outuptDict[i] = None
 	return outputDict
 
 
