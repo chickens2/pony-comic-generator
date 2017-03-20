@@ -22,23 +22,28 @@ def findBetween(s, first, last):
 		return ""
 
 # Draw text centered?
-def drawCenteredText(startY,text,draw,fnt,panelSize):
+def drawCenteredText(startY, text, draw, fnt, panelSize):
 	MAX_W, MAX_H = panelSize[0], panelSize[1]
 	current_h, pad = startY, 10
 	if text is not None:
 		para=textwrap.wrap(text, width=12)
-		print 'para:'
+		print('para:')
 		pprint(para)
 		#draw.text((5,5),para[0],font=fnt)
 		for line in para:
 			w, h = draw.textsize(line, font=fnt)
-			draw.text(((MAX_W - w) / 2, current_h), line, font=fnt,fill=(0,0,0,255))
+			draw.text(
+				((MAX_W - w) / 2, current_h),
+				line,
+				font = fnt,
+				fill=(0, 0, 0, 255)
+				)
 			current_h += h + pad
 	return current_h
 
 # Checks that the ponies are under the correct line of dialogue
-def isCorrectOrder(txtLine1,txtLine2,nameorder):
-	print 'comparing nameorder '+str(nameorder)+" "+txtLine2['name']
+def isCorrectOrder(txtLine1, txtLine2, nameorder):
+	print('comparing nameorder '+str(nameorder)+" "+txtLine2['name'])
 	for name in nameorder:
 		if name == txtLine2['name']:
 			return False
@@ -54,9 +59,9 @@ def pickNestedFile(directory, bad_files):
 	while file is None or file in bad_files:
 		file=random.choice(os.listdir(directory))
 	#file=directory+file # use the full path name
-	print "Trying "+file
+	print("Trying "+file)
 	if os.path.isdir(os.path.join(directory, file))==True:
-		print "It's a directory!"
+		print("It's a directory!")
 		return pickNestedFile(directory+"/"+file, bad_files)
 	else:
 		return directory+"/"+file
@@ -80,31 +85,31 @@ def rollOdds(n):
 
 # give a float decimal for odds
 def rollFraction(odds):
-	if odds>1:
-		return random.random()<(1.0/float(odds))
+	if odds > 1:
+		return random.random() < (1.0/float(odds))
 	else:
-		return random.random()<odds
+		return random.random() < odds
 
 # generates a list of transformations to feed to PIL's im.transform()
 # nullWeight is the relative (to the size of transform_D) likelihood that you don't do any transformation for that step
-def getTransformList(length,nullWeight=10):
-	list=[]
-	for i in (1,length):
+def getTransformList(length, nullWeight=10):
+	list = []
+	for i in (1, length):
 		list.append(getTransform(nullWeight))
 	return list
 
 # applies a list of transformations to an image
-def applyTransformList(list,image):
+def applyTransformList(list, image):
 	for transformation in list:
 		if transformation is not None:
-			image=image.transpose(Image.ROTATE_180)
+			image = image.transpose(Image.ROTATE_180)
 			# eval(transformation), so we're not relying on the hard-coded internal numbers in the Image module
 	return image
 
 # Possibly transforms an image
-def possiblyTransform(image,odds,length=2):
+def possiblyTransform(image, odds, length=2):
 	if rollOdds(odds):
-		return applyTransformList(getTransformList(length),image)
+		return applyTransformList(getTransformList(length), image)
 	else:
 		return image
 
@@ -125,7 +130,6 @@ def getTransform(allowNothing=None):
 
 # formerly the guts of getTranform, back when that was part of generatePanel.py
 # Picks from a weighted probability dictionary
-# oh yeah, it's a one-liner
 def weightedDictPick(weightedDict, increasedNoneWeight=0):
 	return weightedDict.get(
 		random.randint(
@@ -164,27 +168,27 @@ def genTransformDict(flip=10,rotate=20):
 	return transform_D, undoTransform_D
 
 # Sets the panel size
-def setPanelSizes(ps,closeupMultiplier):
-	panelSize=ps
-	charHeight=3*panelSize[1]/7
-	charHeightCloseup=int(charHeight*closeupMultiplier)
-	smallCharHeight=int(charHeight/closeupMultiplier)
-	return charHeight,charHeightCloseup,smallCharHeight
+def setPanelSizes(ps, closeupMultiplier):
+	panelSize = ps
+	charHeight = 3*panelSize[1]/7
+	charHeightCloseup = int(charHeight*closeupMultiplier)
+	smallCharHeight = int(charHeight/closeupMultiplier)
+	return charHeight, charHeightCloseup, smallCharHeight
 
 # Breaks text at spaces after it reaches the maximum number of characters in a line
-def insertLineBreaks(text,maxCharsPerLine):
-	words=text.split(" ")
-	newstr=""
-	currentCharCount=0
+def insertLineBreaks(text, maxCharsPerLine):
+	words = text.split(" ")
+	newstr = ""
+	currentCharCount = 0
 	for word in words:
-		if currentCharCount+len(word)>maxCharsPerLine:
-			newstr+="\n"
-			currentCharCount=0
+		if currentCharCount + len(word) > maxCharsPerLine:
+			newstr += "\n"
+			currentCharCount = 0
 		else:
-			newstr+=" "
-		currentCharCount+=len(word)+1
-		newstr+=word
-	newstr=newstr.strip()
+			newstr += " "
+		currentCharCount += len(word) + 1
+		newstr += word
+	newstr = newstr.strip()
 	return newstr
 
 # draw a circle
