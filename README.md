@@ -4,7 +4,7 @@ This is a program for generating comics from chat text, inspired by Microsoft Co
 
 1. Install Python 2.7
 2. Install dependencies (listed in `requirements.txt`). 
-  * You can do this by installing `pip` and navigating to this directory in the command line and doing the command: `pip install -r requirement.txt`
+  * You can do this by installing `pip` and navigating to this directory in the command line and doing the command: `pip3 install -r requirement.txt`
 
 N.B. If typing `python` or `pip` in the command line gives an error even after installing and you're using Windows, you might have to add them to the path. Look up 'how add to windows path'.
 
@@ -31,6 +31,7 @@ When run from the command line you can specify a file containing IRC text instea
 * In the Backgrounds section of the config file, you may use subfolders, such as `Custom/Test12`.  Put all the backgrounds that you like into the custom folder if you don't want them to be committed back to the repository.
 * If you are having problems with "Not a real JPEG" on symlinked files, make sure they are real soft links and not Mac aliases.  [This automator workflow](http://blog.poynton.ca/?p=281) lets you select all your aliased files in Finder and then batch-convert them in a right-click menu.
 * `generateComic.py` is the driver for the comic generation, the actual heavy lifting is done in `makeComic.py`
+* If you use emoji in your output, please use [Symbolia](http://users.teilar.gr/%7Eg1951d/) for the best results
 
 ## [Future Plans](./roadmap.md)
 
