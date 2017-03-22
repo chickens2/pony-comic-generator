@@ -33,15 +33,15 @@ nextToFill = None
 debugprint = False # Flip this to use the poor man's debug/log statements
 for arg in sys.argv:
 	if arg[0] == '-':
-		nextToFill=arg[1:].lower()
+		nextToFill = arg[1:].lower()
 	else:
 		if nextToFill is not None:
 			if nextToFill[0] == 'f':
-				textFileChat=arg
+				textFileChat = arg
 			if nextToFill[0] == 'b':
-				specifiedBackground=arg
+				specifiedBackground = arg
 			if nextToFill[0] == 't':
-				specifiedTitle= arg
+				specifiedTitle = arg
 		nextToFill = None
 if debugprint is True:
 	print('Verbose mode activated!')
@@ -164,30 +164,30 @@ def getTitle(specifiedTitle=None):
 	return title
 
 # Makes the title panel
-def createTitlePanel(panelSize):
-	title=getTitle()
+def createTitlePanel(panelSize, specifiedTitle=None):
+	title = getTitle(specifiedTitle)
 	img = Image.new("RGBA", panelSize, (255,255,255)) # white background
 	d = ImageDraw.Draw(img)
-	newh=utilFunctions.drawCenteredText(25,title,d,fntLarge,panelSize)
-	newh+=17
-	spacing=15
+	newh = utilFunctions.drawCenteredText(25, title, d, fntLarge, panelSize)
+	newh + =17
+	spacing = 15
 	d.text((spacing,newh), castIntro, font=fntSmall, fill=(0,0,0,255)) # black text
-	newh+=spacing
+	newh += spacing
 	print('title panel???')
 	for key,value in list(names.items()):
-		text=value[1:]
-		moreSpacing=0
+		text = value[1:]
+		moreSpacing = 0
 		if not anonymousMode:
-			text=text+" as "+key
-		filepath='tagicons/'+value+'.png'
+			text = text+" as "+key
+		filepath = 'tagicons/'+value+'.png'
 		print(('icon filepath: '+str(filepath)))
 		if os.path.isfile(filepath):
-			moreSpacing=15
-			profile=Image.open(filepath).convert('RGBA')
-			box=(0,newh,profile.size[0],newh+profile.size[1])
-			img.paste(profile,box,mask=profile)
+			moreSpacing = 15
+			profile = Image.open(filepath).convert('RGBA')
+			box = (0, newh, profile.size[0], newh+profile.size[1])
+			img.paste(profile, box, mask=profile)
 		d.text((spacing+moreSpacing+5,newh), text, font=fntSmall, fill=(0,0,0,255)) # black text
-		newh+=spacing+moreSpacing
+		newh += spacing + moreSpacing
 	generatePanel.drawBorder(img)
 	return img#img.show()
 
@@ -295,18 +295,18 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 	if debugprint is True:
 		print('original allnames:')
 		pprint(allNames)
-	text=""
-	mostInARow=1
-	currentName=None
-	currentInARow=1
-	nameOrder=[]
-	ponylist=[]
+	text = ""
+	mostInARow = 1
+	currentName = None
+	currentInARow = 1
+	nameOrder = []
+	ponylist = []
 	for line in file:
 		#if 'Raribot' in line or '> ~' in line:
 		#	continue
-		line=line.strip()
-		line=line.strip('\n')
-		text+=line
+		line = line.strip()
+		line = line.strip('\n')
+		text += line
 		if debugprint is True:
 			print(('line:'+line))
 		if line[:2]=="* " and quitline(line) is False:
@@ -354,7 +354,7 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 		else:
 			currentInARow=1
 		currentName=name
-	findEmote.defaultSeed=text
+	findEmote.defaultSeed = text
 
 	#this is a bad hack probably but idk how else to do it without adding a million extra parameters everywhere
 	print('the final names list: ')
@@ -364,47 +364,60 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 	print(('most in a row: '+str(mostInARow)))
 	for line in lines:
 		if anonymousMode:
-			line['text']=anonymizeText(line['text'])
+			line['text'] = anonymizeText(line['text'])
 	#print 'lines:'
 	#pprint(lines)
 	#return
-	selectedBackground=selectBackground(text, specifiedBackground)
+	selectedBackground = selectBackground(text, specifiedBackground)
 	print(("Background is "+selectedBackground))
 	#pprint(names)
 	global allText
-	allText=text
+	allText = text
 	#print 'at1'+str(allText)+'^'
-	if mostInARow>3:
-		smallPanels=True
-		panelSize=(200,200)
+	if mostInARow > 3:
+		smallPanels = True
+		panelSize = (200, 200)
 	else:
-		smallPanels=False
-		panelSize=(300,300)
+		smallPanels = False
+		panelSize = (300, 300)
 
-	tp=createTitlePanel(panelSize)
+	tp = createTitlePanel(panelSize, specifiedTitle)
 	print(('generatecomic panelsize: '+str(panelSize)))
 	#tp.show()
-	panels=[]
+	panels = []
 	panels.append(tp)
-	txtLines=list(lines)
-	while len(txtLines)>0:
-		panels.append(createNextPanel(txtLines,panelSize,smallPanels,nameOrder,selectedBackground))
+	txtLines = list(lines)
+	while len(txtLines) > 0:
+		panels.append(createNextPanel(txtLines,
+			panelSize,
+			smallPanels,
+			nameOrder,
+			selectedBackground))
 	panelsAcross=2
 	if smallPanels:
 		panelsAcross=3
-	if names=={}: #if there's no valid text
-		panels.append(generatePanel.drawPanelNoDialogue({},selectedBackground,text+str(len(panels))))
+	if names == {}: #if there's no valid text
+		panels.append(generatePanel.drawPanelNoDialogue({}, selectedBackground, text+str(len(panels))))
 
 	#if it needs an establishing shot with no dialogue
-	if len(panels)%panelsAcross!=0 or names=={}:
+	if len(panels)%panelsAcross != 0 or names=={}:
 		panels.insert(1,generatePanel.drawPanelNoDialogue(nameOrder[:min(3,len(nameOrder))],selectedBackground,text+str(len(panels))))
 	else: #otherwise redo the first panel as zoomed out
 		txtLines2=list(lines)
 		del panels[1]
-		panels.insert(1,createNextPanel(txtLines2,panelSize,smallPanels,nameOrder,selectedBackground,closeup=False))
+		panels.insert(
+			1,
+			createNextPanel(
+				txtLines2,
+				panelSize,
+				smallPanels,
+				nameOrder,
+				selectedBackground,
+				closeup=False)
+			)
 
 	#if there still aren't enough panels, pad the end
-	while len(panels)%panelsAcross!=0 and names!={}:
+	while len(panels)%panelsAcross != 0 and names!={}:
 		panels.append(generatePanel.drawPanelNoDialogue(prevNames,selectedBackground,text+str(len(panels))))
 
 	maxWidth = panelSize[0]*panelsAcross
