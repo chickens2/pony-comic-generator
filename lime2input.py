@@ -7,6 +7,7 @@ import pyperclip
 import io
 import sys
 import os
+sys.path.append("..")
 import utilFunctions
 import string
 import random
@@ -244,7 +245,7 @@ Return to the imperative part of the program from here on
 def main():
 	chatfile = None
 	if limeLog is None:
-		clipboard = pyperclip.paste().encode('utf8')
+		clipboard = pyperclip.paste()
 		chatfile = io.StringIO(clipboard)
 	else:
 		chatfile = open(limeLog).readlines()

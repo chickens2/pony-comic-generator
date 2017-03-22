@@ -43,7 +43,7 @@ def drawCenteredText(startY, text, draw, fnt, panelSize):
 
 # Checks that the ponies are under the correct line of dialogue
 def isCorrectOrder(txtLine1, txtLine2, nameorder):
-	print('comparing nameorder '+str(nameorder)+" "+txtLine2['name'])
+	print(('comparing nameorder '+str(nameorder)+" "+txtLine2['name']))
 	for name in nameorder:
 		if name == txtLine2['name']:
 			return False
@@ -55,11 +55,11 @@ def isCorrectOrder(txtLine1, txtLine2, nameorder):
 # if the file is also a directory, pick a file from the new directory
 # this might choke up if it encounters a directory only containing invalid files
 def pickNestedFile(directory, bad_files):
-	file=None
+	file = None
 	while file is None or file in bad_files:
-		file=random.choice(os.listdir(directory))
-	#file=directory+file # use the full path name
-	print("Trying "+file)
+		file = random.choice(os.listdir(directory))
+	#file = directory + file # use the full path name
+	print(("Trying " + file))
 	if os.path.isdir(os.path.join(directory, file))==True:
 		print("It's a directory!")
 		return pickNestedFile(directory+"/"+file, bad_files)
@@ -68,9 +68,9 @@ def pickNestedFile(directory, bad_files):
 
 # does a 2-pass check through PIL's im.transform() to access all 8 possible outcomes of one rotation optionally followed by one rotation
 def imageFlip(image):
-	tr=getTransform()
-	image=image.transpose(tr)
-	tr=getTransform(20)
+	tr = getTransform()
+	image = image.transpose(tr)
+	tr = getTransform(20)
 	if tr is None:
 		return image
 	else:
@@ -81,7 +81,7 @@ def rollOdds(n):
 	n = int(n) # in case you're some wiseguy who uses a non-int to get yourself an error
 	if n < 1:
 		return false # rolling a die with no sides or negative sides will return false, rather than an error (for now)
-	return random.randint(0,n-1)==0
+	return random.randint(0, n-1) == 0
 
 # give a float decimal for odds
 def rollFraction(odds):
@@ -134,7 +134,7 @@ def weightedDictPick(weightedDict, increasedNoneWeight=0):
 	return weightedDict.get(
 		random.randint(
 			1,
-			len(weightedDict.keys()) + increasedNoneWeight
+			len(list(weightedDict.keys())) + increasedNoneWeight
 			) - 1,
 		None
 		)
@@ -255,7 +255,7 @@ def decomposeNumericComponents(number, base):
 	# The following True parameter isn't necessary, but is there to be extra-clear
 	exponentList = decomposeNumericSwitchList(number, base, True)
 
-	for exponent in exponentList.keys():
+	for exponent in list(exponentList.keys()):
 		componentList[base**exponent] = exponentList[exponent]
 	return componentList
 
@@ -263,7 +263,7 @@ def decomposeNumericComponents(number, base):
 def uniqueSumOfPowersList(number, base):
 	complist = []
 	components = decomposeNumericComponents(number, base)
-	for component in components.keys():
+	for component in list(components.keys()):
 		complist.append(component*components[component])
 	return complist
 

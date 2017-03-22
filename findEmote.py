@@ -7,12 +7,12 @@ import json
 from pprint import pprint
 import os
 import random
-import urllib
-from PIL import Image,ImageFont,ImageDraw
+import urllib.request, urllib.parse, urllib.error
+from PIL import Image, ImageFont, ImageDraw
 import cacher
-import ConfigParser
+import configparser
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser(inline_comment_prefixes=(';',))
 config.readfp(open('config.cfg'))
 
 
@@ -32,7 +32,7 @@ for fn in os.listdir('emotes'):
 	data=None
 	with open('emotes/'+fn) as data_file:
 		data = json.load(data_file)
-		for key in data.keys():
+		for key in list(data.keys()):
 			value=data[key]
 			if 'Emotes' not in value or '' not in value['Emotes']:
 				del data[key]
@@ -55,7 +55,7 @@ for fn in os.listdir('tags'):
 	data=None
 	with open('tags/'+fn) as data_file:
 		data = json.load(data_file)
-	for key, value in data.iteritems():
+	for key, value in list(data.items()):
 		if key in emotesByName and len(value)==1:
 			emotes=set()
 			#print 'tag: '+value[0]
@@ -65,7 +65,7 @@ for fn in os.listdir('tags'):
 				else:
 					emotes=emotesByPony[value[0]]
 				emotes.add(key)
-for key in emotesByPony.keys():
+for key in list(emotesByPony.keys()):
 	if len(emotesByPony[key])<MIN_LENGTH:
 		del emotesByPony[key]
 	#pprint(emotesByPony)
@@ -73,7 +73,7 @@ for key in emotesByPony.keys():
 #
 def getProceduralPony(seed):
 	random.seed(seed)
-	pony=random.choice(emotesByPony.keys())
+	pony=random.choice(list(emotesByPony.keys()))
 	return pony
 
 #
@@ -92,22 +92,22 @@ def getEmote(emoteName):
 	#if offset[0]<0 or offset[1]<1:
 	#	return None
 	size=data['Emotes']['']['Size']
-	print 'emotename: '+emoteName
+	print(('emotename: '+emoteName))
 	pprint(data)
-	print url
+	print(url)
 	if 'http:' not in url:
 		url='http:'+url
 	imgloc=cacher.getUrlFile(url)
 	fullImage=Image.open(imgloc).convert('RGBA')
 	#urllib.urlretrieve(url,'temp.png')
 	#fullImage=Image.open("temp.png").convert('RGBA')
-	print offset
-	print size
+	print(offset)
+	print(size)
 	fullImage=fullImage.crop((offset[0],offset[1],offset[0]+size[0],offset[1]+size[1]))
 	if emoteName in emoteMetadata:
 		data=emoteMetadata[emoteName]
 		if 'right' in data:
-			print 'findemote flipping image'
+			print('findemote flipping image')
 			fullImage=fullImage.transpose(Image.FLIP_LEFT_RIGHT)
 	return fullImage
 
@@ -117,15 +117,15 @@ def getRandomEmote(seed,pony=None):
 	if len(seed)<1:
 		seed=defaultSeed
 	if pony is None:
-		pony=random.choice(emotesByPony.keys())
-	print pony
+		pony=random.choice(list(emotesByPony.keys()))
+	print(pony)
 	emote=None
 	emoteNames=list(emotesByPony[pony])
 	#while emote is None and len(emoteNames)>0:
-	print 'randomly choosing emote from list of '+str(len(emoteNames))+" with seed "+str(seed)
+	print(('randomly choosing emote from list of '+str(len(emoteNames))+" with seed "+str(seed)))
 	random.seed(seed)
 	emoteName=random.choice(emoteNames)
-	print 'selected emote: '+emoteName
+	print(('selected emote: '+emoteName))
 	random.seed()
 	emote=getEmote(emoteName)
 		#emoteNames.remove(emote)

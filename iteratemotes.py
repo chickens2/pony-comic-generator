@@ -3,8 +3,8 @@
 # -*- coding: UTF-8 -*-
 # vim: set fileencoding=UTF-8 :
 
-import urllib
-from urllib import FancyURLopener
+import urllib.request, urllib.parse, urllib.error
+from urllib.request import FancyURLopener
 from PIL import Image,ImageFont,ImageDraw
 import cacher
 #import msvcrt
@@ -58,15 +58,15 @@ def loadData2():
 	for file in os.listdir('tagAssignments'):
 		with open('tagAssignments/'+file, 'r') as f:
 			tagsByImage.update(json.load(f))
-	for key,value in tagsByImage.iteritems():
+	for key,value in list(tagsByImage.items()):
 		for item in value:
 			ad(imageByTags,item,key)
-	print 'loaded stuff:'
+	print('loaded stuff:')
 	#pprint(tagsByImage)
 	#pprint(imageByTags)
 def saveData2():
 	global tagsByImage
-	for key,taglist in tagsByImage.iteritems():
+	for key,taglist in list(tagsByImage.items()):
 		with open('tagAssignments/'+key+'.json', 'w') as f:
 			json.dump({key:taglist},f)
 def oneInList(list1,list2):
@@ -81,7 +81,7 @@ def processDataRecursive(tag,image):
 	global tagsByImage
 	global selectedCount
 	global totalSelectionsMade
-	print 'trying to do tag:'+tag
+	print(('trying to do tag:'+tag))
 	if tag not in customTags:
 		'not in customtags: '+tag
 		return
@@ -104,12 +104,12 @@ def processDataRecursive(tag,image):
 		#alreadyThere=False
 		#print 'tagsbyimage:'
 		#pprint(tagsByImage)
-		print 'doing category selection for '+tag
+		print(('doing category selection for '+tag))
 		tag2=None
 		if  image in tagsByImage:
 			tag2=oneInList(customTags[tag],tagsByImage[image])
 		if tag2 is None:
-			print 'choose:\n['+"]        [".join(customTags[tag])+']\n\n\n'
+			print(('choose:\n['+"]        [".join(customTags[tag])+']\n\n\n'))
 			charused=msvcrt.getch()
 			if charused=='\t':
 				ad( imageByTags,'incompatible',image)
@@ -119,7 +119,7 @@ def processDataRecursive(tag,image):
 				saveData()
 				sys.exit()
 			tag2=customTags[tag][int(charused)-1]
-			print '['+tag2+']'
+			print(('['+tag2+']'))
 			ad( imageByTags,tag2,image)
 			ad(tagsByImage,image,tag2)
 			totalSelectionsMade+=1
@@ -132,7 +132,7 @@ def processDataRecursive(tag,image):
 def processData(image):
 	global selectedCount
 	selectedCount=0
-	print 'processing image: '+image
+	print(('processing image: '+image))
 	pyperclip.copy(image)
 	return processDataRecursive('category:top',image)
 # class MyOpener(FancyURLopener):
