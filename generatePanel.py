@@ -12,18 +12,18 @@ from utilFunctions import insertLineBreaks
 
 #charsInLine=22
 global panelSize
-panelSize=(200,200)
+panelSize = (200,200)
 global charHeight
 global charHeightCloseup
-charHeight=None
-charHeightCloseup=None#charHeight*closeupMultiplier
-names={}#should mirror generatecomic name dictionary
+charHeight = None
+charHeightCloseup = None #charHeight*closeupMultiplier
+names = {} #should mirror generatecomic name dictionary
 
 # set the panel size from another module
-def setPS(ps,info):
+def setPS(ps, info):
 	global panelSize
 	print(('panelsize changed from '+str(panelSize)+" to "+str(ps)+" by "+str(info)))
-	panelSize=ps
+	panelSize = ps
 	return ps
 
 
@@ -36,21 +36,16 @@ fontPixelWidth = config.getint('Fonts','talk_charwidth')
 closeupMultiplier = config.getfloat('Options','closeup_zoom')
 
 boxBorder = (15, 9)
-characterMaxSize = (panelSize[0]/2, panelSize[0]/2)
+characterMaxSize = (panelSize[0]//2, panelSize[0]//2)
 
-charHeight,charHeightCloseup,farCharHeight=utilFunctions.setPanelSizes(panelSize,closeupMultiplier) # moved to generate comic.py
+charHeight, charHeightCloseup, farCharHeight = utilFunctions.setPanelSizes(panelSize, closeupMultiplier) # moved to generate comic.py
 
 
 # draws text, returns how tall the box ended up being
 def drawText(image, text, box, arroworientation, color=None):
 	if color is None:
-		if utilFunctions.rollOdds(69) is True:
-			color = (
-				utilFunctions.triangularInt(0, 256, 7),
-				utilFunctions.triangularInt(0, 256, 9),
-				utilFunctions.triangularInt(0, 256, 11),
-				utilFunctions.triangularInt(0, 256, 202)
-			)
+		if utilFunctions.rollOdds(369) is True:
+			color = utilFunctions.rollColor(9, 11, 7, 244)
 		else:
 			color = (0, 0, 0, 255)
 	if len(text) < 1:
@@ -146,33 +141,13 @@ def getBackgroundImage(backgroundName,closeup=False):
 #
 #countereiorg=0
 def getCharacterImage(name1, dialog1, transpose, imMaxLength, imheight=None):
+	if imheight is None:
+		imheight = im.size[1]*imMaxLength/im.size[0]
+	imheight = int(imheight) # catch any previous problems
 	global countereiorg
 	im = None
-	if name1 in names:
-		print(('getting image from manual list for '+str(name1)+" "+names[name1]))
-		im = findEmote.getRandomEmote(dialog1,names[name1])
-		#countereiorg+=1
-		#print 'counter for debug '+str(countereiorg)
-		#print 'orig'
-		#im.show()
-		#raw_input("paused0")
-	else:
-		print(('getting image from procedural for '+str(name1)))
-		im = findEmote.getProceduralEmote(name1,dialog1)#Image.open("flair.png").convert('RGBA')
-	im.thumbnail(characterMaxSize)
-	#print 'gci imheight '+str(imheight)
-	# if imheight is None:
-		# imheight=charHeight#3*panelSize[1]/8
-	# imheightold=imheight
-	# if im.size[0]>imheight:
-		# print 'imsize '+str(imheight)+" "+str(im.size)
-		# imheight=imheight*(float(im.size[0])/im.size[1])
-		# print 'too long resizing image '+str(charHeight)+" "+str(imheightold)+" "+str(imheight)
-	# im=im.resize(( # the max functions are to handle any bugged-out emotes
-		# max(int(imheight*(float(im.size[0])/im.size[1])),10),
-		# max(int(imheight),10)))
-	if im.size[0] > imMaxLength:
-		im = im.resize((int(imMaxLength), int(im.size[1]*imMaxLength/im.size[0])))
+	im = findEmote.getRandomEmote(dialog1, name1)
+	im = resizeimage.resize_contain(im, [int(imMaxLength), imheight])
 	if transpose:
 		im = im.transpose(Image.FLIP_LEFT_RIGHT)
 	return im
@@ -243,15 +218,15 @@ def draw3CharactersAndBackground(name1, name2, name3, dialog1, dialog2, dialog3,
 
 # try to make a generic character drawing
 # list is a dictionary in the form of {Name1:Dialogue1,Name2:Dialogue2,etc…}
-def putCharactersOnBackground(list,backgroundName,closeup=True):
-	bg=getBackgroundImage(backgroundName,closeup)
-	im=None
-	heightUsed=farCharHeight
+def putCharactersOnBackground(list, backgroundName, closeup=True):
+	bg = getBackgroundImage(backgroundName, closeup)
+	im = None
+	heightUsed = farCharHeight
 	if closeup:
-		heightUsed=charHeight
+		heightUsed = charHeight
 	for name in list(list.keys()):
-		im=getCharacterImage(name,list[name],False,heightUsed)
-		posy=panelSize[1]-im.size[1]
+		im = getCharacterImage(name, list[name], False, heightUsed)
+		posy = panelSize[1] - im.size[1]
 		#posx+=
 
 #
@@ -285,11 +260,11 @@ def draw2CharactersAndBackground(name1, name2, dialog1, dialog2, backgroundName,
 #
 def draw1CharacterAndBackground(name1, dialog1, backgroundName, closeup=True):
 	print(('drawing 1 character and background, closeup is '+str(closeup)))
-	bg = getBackgroundImage(backgroundName,closeup)
+	bg = getBackgroundImage(backgroundName, closeup)
 	heightUsed = charHeight#farCharHeight
 	if closeup:
 		heightUsed = charHeightCloseup#charHeight
-	im = getCharacterImage(name1, dialog1, True, heightUsed)
+	im = getCharacterImage(name1, dialog1, True, panelSize[0]//2, heightUsed)
 	posx = panelSize[0]//2 - im.size[0]//2 # use // to ensure integer division
 	posy = panelSize[1]-im.size[1]
 	#if closeup:
@@ -300,26 +275,44 @@ def draw1CharacterAndBackground(name1, dialog1, backgroundName, closeup=True):
 
 #
 def drawLeftText(bg,dialog1,height,col=None):
-	bubbleLength=getBubbleLength()
-	return drawText(bg,dialog1,(spaceFromEdge[0],height,bubbleLength),0,color=col)
+	bubbleLength = getBubbleLength()
+	return drawText(
+		bg,
+		dialog1,
+		(spaceFromEdge[0], height, bubbleLength),
+		0,
+		color=col
+		)
 
 #
 def drawRightText(bg,dialog1,height,col=None):
 	bubbleLength=getBubbleLength()
-	return drawText(bg,dialog1,(spaceFromEdge[0]+2*bubbleLength/5,height,bubbleLength),2,color=col)
+	return drawText(
+		bg,
+		dialog1,
+		(spaceFromEdge[0] + 2*bubbleLength/5, height, bubbleLength),
+		2,
+		color=col
+		)
 
 #
 def drawCenterText(bg,dialog1,height,col=None):
 	bubbleLength=getBubbleLength()
-	return drawText(bg,dialog1,(spaceFromEdge[0]+1*bubbleLength/6,height,int(bubbleLength*1.2)),1,color=col)
+	return drawText(
+		bg,
+		dialog1,
+		(spaceFromEdge[0]+1*bubbleLength/6, height, int(bubbleLength*1.2)),
+		1,
+		color=col
+		)
 
 #
 def drawBorder(img):
 	d = ImageDraw.Draw(img)
-	d.line((0,0, img.size[0],0), fill=(0,0,0),width=5)
-	d.line((0,0,0,img.size[1]), fill=(0,0,0),width=5)
-	d.line((0,img.size[1],img.size[0],img.size[1]), fill=(0,0,0),width=5)
-	d.line((img.size[0],img.size[1], img.size[0],0), fill=(0,0,0),width=5)
+	d.line((0,0,img.size[0],0), fill=(0,0,0), width=5)
+	d.line((0,0,0,img.size[1]), fill=(0,0,0), width=5)
+	d.line((0,img.size[1],img.size[0],img.size[1]), fill=(0,0,0), width=5)
+	d.line((img.size[0],img.size[1], img.size[0],0), fill=(0,0,0), width=5)
 	return img
 
 # 2 characters both with dialogue
@@ -348,6 +341,7 @@ def drawPanel2Characters(name1,name2,dialog1,dialog2,backgroundName,textOrder=0,
 	drawBorder(bg)
 	return bg#bg.save("test.jpg","JPEG")
 
+
 # one character
 def drawPanel1Character(name1,dialog1,backgroundName,iscloseup=False):
 	bg=draw1CharacterAndBackground(name1,dialog1,backgroundName,closeup=iscloseup)
@@ -355,15 +349,35 @@ def drawPanel1Character(name1,dialog1,backgroundName,iscloseup=False):
 	drawBorder(bg)
 	return bg#bg.save("test.jpg","JPEG")
 
+
 # empty panel
-def drawPanelNoDialogue(names,backgroundName,seed,iscloseup=False):
-	if len(names)==1:
-		return drawBorder(draw1CharacterAndBackground(names[0],names[0]+seed,backgroundName,iscloseup))
-	if len(names)==2:
-		return drawBorder(draw2CharactersAndBackground(names[0],names[1],names[0]+seed,names[1]+seed,backgroundName,iscloseup))
-	if len(names)==3:
-		return drawBorder(draw3CharactersAndBackground(names[0],names[1],names[2],names[0]+seed,names[1]+seed,names[2]+seed,backgroundName,iscloseup))
-	return drawBorder(getBackgroundImage(backgroundName,False))
+def drawPanelNoDialogue(names, backgroundName, seed, iscloseup=False):
+	if len(names) == 1:
+		return drawBorder(draw1CharacterAndBackground(
+			names[0],
+			names[0]+seed,
+			backgroundName,
+			iscloseup))
+	if len(names) == 2:
+		return drawBorder(draw2CharactersAndBackground(
+			names[0],
+			names[1],
+			names[0]+seed,
+			names[1]+seed,
+			backgroundName,
+			iscloseup))
+	if len(names) == 3:
+		return drawBorder(draw3CharactersAndBackground(
+			names[0],
+			names[1],
+			names[2],
+			names[0]+seed,
+			names[1]+seed,
+			names[2]+seed,
+			backgroundName,
+			iscloseup))
+	print("No ponies have been passed to me! "+str(names))
+	return drawBorder(getBackgroundImage(backgroundName, False))
 
 
 

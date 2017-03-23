@@ -73,63 +73,78 @@ for key in list(emotesByPony.keys()):
 #
 def getProceduralPony(seed):
 	random.seed(seed)
-	pony=random.choice(list(emotesByPony.keys()))
+	pony = random.choice(list(emotesByPony.keys()))
 	return pony
 
 #
-def getProceduralEmote(seed1,seed2):
-	return getRandomEmote(seed2,getProceduralPony(seed1))
+def getProceduralEmote(seed1, seed2):
+	return getRandomEmote(seed2, getProceduralPony(seed1))
 
 #
 def getEmote(emoteName):
-	data=emotesByName[emoteName]
-	url=data['Emotes']['']['Image']
-	offset=[0,0]
+	data = emotesByName[emoteName]
+	url = data['Emotes']['']['Image']
+	offset = [0,0]
 	if 'Offset' in data['Emotes']['']:
-		offset=data['Emotes']['']['Offset']
+		offset = data['Emotes']['']['Offset']
 	#offset[0]=offset[0]*-1
 	#offset[1]=offset[1]*-1
 	#if offset[0]<0 or offset[1]<1:
 	#	return None
-	size=data['Emotes']['']['Size']
+	size = data['Emotes']['']['Size']
 	print(('emotename: '+emoteName))
 	pprint(data)
 	print(url)
 	if 'http:' not in url:
 		url='http:'+url
-	imgloc=cacher.getUrlFile(url)
-	fullImage=Image.open(imgloc).convert('RGBA')
+	imgloc = cacher.getUrlFile(url)
+	fullImage = Image.open(imgloc).convert('RGBA')
 	#urllib.urlretrieve(url,'temp.png')
 	#fullImage=Image.open("temp.png").convert('RGBA')
 	print(offset)
 	print(size)
-	fullImage=fullImage.crop((offset[0],offset[1],offset[0]+size[0],offset[1]+size[1]))
+	fullImage = fullImage.crop((offset[0],offset[1],offset[0]+size[0],offset[1]+size[1]))
 	if emoteName in emoteMetadata:
-		data=emoteMetadata[emoteName]
+		data = emoteMetadata[emoteName]
 		if 'right' in data:
 			print('findemote flipping image')
-			fullImage=fullImage.transpose(Image.FLIP_LEFT_RIGHT)
+			fullImage = fullImage.transpose(Image.FLIP_LEFT_RIGHT)
 	return fullImage
 
 #
-def getRandomEmote(seed,pony=None):
+def getRandomEmote(seed, pony=None):
 	global defaultSeed
-	if len(seed)<1:
-		seed=defaultSeed
+	if len(seed) < 1:
+		seed = defaultSeed
 	if pony is None:
-		pony=random.choice(list(emotesByPony.keys()))
+		pony = random.choice(list(emotesByPony.keys()))
 	print(pony)
-	emote=None
-	emoteNames=list(emotesByPony[pony])
+	emote = None
+	emoteNames = list(emotesByPony[pony])
 	#while emote is None and len(emoteNames)>0:
 	print(('randomly choosing emote from list of '+str(len(emoteNames))+" with seed "+str(seed)))
 	random.seed(seed)
-	emoteName=random.choice(emoteNames)
+	emoteName = random.choice(emoteNames)
 	print(('selected emote: '+emoteName))
-	random.seed()
-	emote=getEmote(emoteName)
+	random.seed(seed)
+	emote = getEmote(emoteName)
 		#emoteNames.remove(emote)
 	return emote
+
+# Increment is a parameter used to make sure this does not loop indefinitely
+def select_horse(nickname, ponylist, unique=False, increment=1):
+	word = ""
+	if unique is True:
+		word = "unique "
+	print("Picking "+word+"pony for "+nickname+", take "+str(increment))
+	pony = getProceduralPony(nickname*increment)
+	print("Trying "+pony)
+	if unique is False or increment > 12 or pony not in ponylist:
+		ponylist.append(pony)
+		return pony
+	else:
+		print(('pony '+pony+' is already in use; picking a new horse'))
+		return select_horse(nickname, ponylist, unique, increment + 1)
 
 # Other code
 

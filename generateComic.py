@@ -30,7 +30,6 @@ textFileChat = None
 specifiedBackground = None
 specifiedTitle  = None
 nextToFill = None
-debugprint = False # Flip this to use the poor man's debug/log statements
 for arg in sys.argv:
 	if arg[0] == '-':
 		nextToFill = arg[1:].lower()
@@ -43,9 +42,8 @@ for arg in sys.argv:
 			if nextToFill[0] == 't':
 				specifiedTitle = arg
 		nextToFill = None
-if debugprint is True:
-	print('Verbose mode activated!')
-	print(('chat from log: '+str(textFileChat)))
+
+
 
 config = configparser.ConfigParser(inline_comment_prefixes=(';',))
 config.readfp(open('config.cfg'))
@@ -59,6 +57,14 @@ uploadImgur = config.get('Options','upload_imgur').upper()=='TRUE'
 castIntro = config.get('Options','cast_introduction')
 repeatMode = config.get('Options','keep_window_open').upper()=='TRUE'
 closeupMultiplier = config.getfloat('Options','closeup_zoom')
+allowDuplicates = config.get('Options','allow_duplicates').upper()=='TRUE'
+rainbowCast = config.get('Options','rainbow_cast').upper()=='TRUE'
+debugprint = config.get('Options','terminal_debug').upper()=='TRUE'
+
+if debugprint is True:
+	print('Verbose mode activated!')
+	print(('chat from log: '+str(textFileChat)))
+
 
 uploadReddit = None
 reddit = None
@@ -104,89 +110,120 @@ if __name__ == "__main__":
 	allNames=dict(config2.items('Aliases'))
 
 # Set up names list
-allText=""
-lines=[]
+allText = ""
+lines = []
 allNames.update(dict(config.items('Aliases'))) #add aliases from config.cfg, overwrite defaults
-allNames2={}
+allNames2 = {}
 for key in list(allNames.keys()):
-	allNames2[key.lower()]=allNames[key].lower()
-allNames=allNames2
+	allNames2[key.lower()] = allNames[key].lower()
+allNames = allNames2
 if debugprint is True:
 	print('final alias list: ')
 	pprint(allNames)
-names={}
+names = {}
 
-# Replace all mentions of nicks with their corresponding pony names
-def anonymizeText(text):
-	newtext=text
-	newWords=[]
-	words=text.split(" ") # can't regex here or else it adds too many spaces around punctuation
+
+# Recursively searches through lines of text to
+# remove any words found in nameList.keys() and replace
+# them with the corresponding value
+def anonWord(wordIn, nameList, joiner='', recheck=True):
+	masterNameList = {}
 	if debugprint is True:
-		print('anonymizing')
-	for word in words:
-		if len(word)>=4:
-			parts=re.findall(r"\w+|[^\w\s]", word, re.UNICODE) # handle 's and names @end of sentences
-			word=""
-			if debugprint is True:
-				print(('considering word '+word))
-			for part in parts:
-				if debugprint is True:
-					print(('word part '+part))
-				if allNames.get(part.lower(),None) is not None:
-					if debugprint is True:
-						print(("removing a name "+part))
-					part=allNames[part.lower()][1:] # [1:] to get rid of the + in dialogue
-				word+=part
-		newWords.append(word)
-	newtext=" ".join(newWords)
-	return newtext
+		print(('considering: '+wordIn))
+
+	# Don't bother if the word is too short
+	if len(wordIn) < 4:
+		return wordIn
+
+	if recheck is False:
+		if nameList.get(wordIn.lower(), None) is not None:
+			print(("removing a name " + wordIn))
+			return nameList[wordIn.lower()][1:] # [1:] to get rid of the + in dialogue
+		return wordIn
+
+	if joiner != '': # special case for how to parse space-delimited words
+		print("Splitting into words delimited by \'"+joiner+"\'")
+		parts = wordIn.split(joiner)
+		recheck = True
+	else:
+		parts = re.findall(r"\w+|[^\w\s]", wordIn, re.UNICODE)
+		recheck = False
+	newparts = []
+	for part in parts:
+		newparts.append(anonWord(part, nameList, recheck=recheck))
+	return joiner.join(newparts)
+
+
 
 # Pick a title for the strip
 def getTitle(specifiedTitle=None):
 	if specifiedTitle is not None:
 		return specifiedTitle
 	random.seed(allText)
-	title=None
-	if len(lines)==0:
-		line=""
+	title = None
+	if len(lines) == 0:
+		line = ""
 	else:
-		line=random.choice(lines)
-		words=line['text'].split(" ")
-		if len(words)>5:
-			words=words[-5:]
-		while len(words)>2 and random.random()>0.4:
+		line = random.choice(list(lines.keys()))
+		words = lines[line]['text'].split(" ")
+		if len(words) > 5:
+			words = words[-5:]
+		while len(words) > 2 and random.random() > 0.4:
 			print((words[0]))
 			del words[0]
-		title=string.capwords(" ".join(words))
+		title = string.capwords(" ".join(words))
 		#title=textwrap.wrap(title, width=15)
 		if debugprint is True:
 			print(('title '+str(title)))
 	return title
 
 # Makes the title panel
-def createTitlePanel(panelSize, specifiedTitle=None):
+def createTitlePanel(panelSize, castlist, specifiedTitle=None):
 	title = getTitle(specifiedTitle)
 	img = Image.new("RGBA", panelSize, (255,255,255)) # white background
 	d = ImageDraw.Draw(img)
 	newh = utilFunctions.drawCenteredText(25, title, d, fntLarge, panelSize)
-	newh + =17
+	newh += 17
 	spacing = 15
-	d.text((spacing,newh), castIntro, font=fntSmall, fill=(0,0,0,255)) # black text
+	d.text(
+		(spacing, newh),
+		castIntro,
+		font = fntSmall,
+		fill = utilFunctions.rollColor(11, 12, 3, 252)
+		) # change to (0,0,0,255) for always black text
 	newh += spacing
-	print('title panel???')
-	for key,value in list(names.items()):
-		text = value[1:]
+	print('title panel!!!')
+
+	# Go through the cast list and add them to the title panel
+	for name in list(castlist.keys()):
+		character = castlist[name][1:]
 		moreSpacing = 0
+		text = character
 		if not anonymousMode:
-			text = text+" as "+key
-		filepath = 'tagicons/'+value+'.png'
+			text += " as " + name
+
+		# Add a nice cute icon…
+		filepath = 'tagicons/' + character + '.png'
 		print(('icon filepath: '+str(filepath)))
+		# …if it exists
 		if os.path.isfile(filepath):
 			moreSpacing = 15
 			profile = Image.open(filepath).convert('RGBA')
 			box = (0, newh, profile.size[0], newh+profile.size[1])
 			img.paste(profile, box, mask=profile)
-		d.text((spacing+moreSpacing+5,newh), text, font=fntSmall, fill=(0,0,0,255)) # black text
+
+		if rainbowCast is True:
+			fntClr = utilFunctions.rollColor(1, 2, 12, 249)
+		else:
+			fntClr = (0, 0, 0, 255)
+
+		# Print the text
+		d.text(
+			(spacing + moreSpacing + 5, newh),
+			text,
+			font = fntSmall,
+			fill = fntClr
+			) # change to (0,0,0,255) for consistently black text
 		newh += spacing + moreSpacing
 	generatePanel.drawBorder(img)
 	return img#img.show()
@@ -197,54 +234,112 @@ prevNames=[] # not sure what this is doing here
 #
 def createNextPanel(txtLines, panelSize, smallPanels, nameorder, selectedBackground, closeup=True):
 	global prevNames
-	dialogueOptions=[0]
-	generatePanel.setPS(panelSize,"generateComic:createNextPanel")
+	dialogueOptions = [0]
+	generatePanel.setPS(panelSize, "generateComic:createNextPanel")
 	print(('nameorder: '+str(nameorder)))
 	print(('gppanelsize '+str(generatePanel.panelSize)+" "+str(panelSize)))
-	if len(txtLines)>1 and txtLines[1]['name'] != txtLines[0]['name'] and generatePanel.hasRoomForDialogue2(txtLines[0]['text'],txtLines[1]['text'] ):
+	if  len(txtLines) < 1:
+		print("No text sent; drawing empty panel!!")
+		return generatePanel.drawPanelNoDialogue(
+			{},
+			selectedBackground,
+			str(len(nameorder))
+			)
+	if (len(txtLines) > 1 and
+			txtLines[1]['name'] != txtLines[0]['name'] and
+			generatePanel.hasRoomForDialogue2(txtLines[0]['text'], txtLines[1]['text'])):
 		dialogueOptions.append(1)
-		if len(txtLines)>2 and txtLines[2]['name'] != txtLines[1]['name'] and txtLines[0]['name'] != txtLines[2]['name'] and generatePanel.hasRoomForDialogue3(txtLines[0]['text'],txtLines[1]['text'],txtLines[2]['text'] ):
+		if (len(txtLines) > 2 and
+				txtLines[2]['name'] != txtLines[1]['name'] and
+				txtLines[0]['name'] != txtLines[2]['name'] and generatePanel.hasRoomForDialogue3(
+					txtLines[0]['text'],
+					txtLines[1]['text'],
+					txtLines[2]['text']
+				)):
 			dialogueOptions.append(2)
 	random.seed(str(txtLines))
-	dialogueChoice=random.choice(dialogueOptions)
-	panel=None
+	dialogueChoice = random.choice(dialogueOptions)
+	panel = None
 
-	currentNames=[]
+	currentNames = {}
+	prevNames = {}
 	print(('prevnames to start '+str(dialogueChoice)+" "+str(list(range(dialogueChoice)))))
 	pprint(prevNames)
-	for i in range(dialogueChoice+1):
-		name=txtLines[i]['name']
+	for i in range(dialogueChoice + 1):
+		name = txtLines[i]['name']
+		pony = txtLines[i]['pony']
 		print(('should be removing name '+name))
-		if name in prevNames: prevNames.remove(name)
-		currentNames.append(name)
+		if name in list(prevNames.keys()):
+			prevNames.pop(name)
+		currentNames[name] = pony
 	print('prevnames after')
 	pprint(prevNames)
-	for name in prevNames:
-		if dialogueChoice>=2:
+
+	for name in list(prevNames.keys()):
+		if dialogueChoice >= 2:
 			break
 		else:
-			dialogueChoice+=1
-			txtLines.insert(0,{'name':name,'text':''})
+			dialogueChoice += 1
+			txtLines.insert(0, {'name':name, 'text':'', 'pony':allNames[name]})
 			#currentNames.append(name)
 	print('txtLines: ')
 	pprint(txtLines)
-	if dialogueChoice==0:
-		panel=generatePanel.drawPanel1Character(txtLines[0]['name'],txtLines[0]['text'],selectedBackground,iscloseup=closeup)
+
+	for line in txtLines:
+		if line.get('pony', None) is None:
+			raise ModuleNotFoundError(str(line)+" does not contain a pony!!!!!!  Quitting.")
+			sys.exit(7)
+
+	if dialogueChoice == 0:
+		panel = generatePanel.drawPanel1Character(
+			txtLines[0]['pony'],
+			txtLines[0]['text'],
+			selectedBackground,
+			iscloseup=closeup
+			)
 		del txtLines[0]
-	if dialogueChoice==1:
-		print(('iscorrectorder: '+str(utilFunctions.isCorrectOrder(txtLines[0],txtLines[1],nameorder))))
-		if utilFunctions.isCorrectOrder(txtLines[0],txtLines[1],nameorder):
-			panel=generatePanel.drawPanel2Characters(txtLines[0]['name'],txtLines[1]['name'],txtLines[0]['text'],txtLines[1]['text'],selectedBackground,iscloseup=closeup)
+	if dialogueChoice == 1:
+		print(('iscorrectorder: ' + str(utilFunctions.isCorrectOrder(
+			txtLines[0],
+			txtLines[1],
+			nameorder
+			))))
+		if utilFunctions.isCorrectOrder(txtLines[0], txtLines[1], nameorder):
+			panel = generatePanel.drawPanel2Characters(
+				txtLines[0]['pony'],
+				txtLines[1]['pony'],
+				txtLines[0]['text'],
+				txtLines[1]['text'],
+				selectedBackground,
+				iscloseup=closeup
+				)
 		else:
-			panel=generatePanel.drawPanel2Characters(txtLines[1]['name'],txtLines[0]['name'],txtLines[0]['text'],txtLines[1]['text'],selectedBackground,textOrder=1,iscloseup=closeup)
+			panel = generatePanel.drawPanel2Characters(
+				txtLines[1]['pony'],
+				txtLines[0]['pony'],
+				txtLines[0]['text'],
+				txtLines[1]['text'],
+				selectedBackground,
+				textOrder=1,
+				iscloseup=closeup
+				)
 		del txtLines[0]
 		del txtLines[0]
-	if dialogueChoice==2:
-		panel=generatePanel.drawPanel3Characters(txtLines[0]['name'],txtLines[1]['name'],txtLines[2]['name'],txtLines[0]['text'],txtLines[1]['text'],txtLines[2]['text'],selectedBackground,iscloseup=closeup)
+	if dialogueChoice == 2:
+		panel = generatePanel.drawPanel3Characters(
+			txtLines[0]['pony'],
+			txtLines[1]['pony'],
+			txtLines[2]['pony'],
+			txtLines[0]['text'],
+			txtLines[1]['text'],
+			txtLines[2]['text'],
+			selectedBackground,
+			iscloseup=closeup
+			)
 		del txtLines[0]
 		del txtLines[0]
 		del txtLines[0]
-	prevNames=currentNames
+	prevNames = currentNames
 	print(('returning panel '+str(panel)+" "+str(dialogueChoice)))
 	return panel
 
@@ -284,6 +379,102 @@ def quitline(line):
 			return True
 	return False
 
+#
+def cleanupline(linein, namelist):
+	# Skip Raribot commands
+	#if 'Raribot' in linein or '> ~' in linein:
+	#	continue
+
+	# Cleanup the line
+	linein = linein.strip()
+	linein = linein.strip('\n')
+	if debugprint is True:
+		print(('line:'+linein))
+
+	# Process /me commands
+	if linein[:2] == "* " and quitline(linein) is False:
+		linein = linein[2:]
+		linein = '<' + linein[:linein.index(' ')] + '> *' + linein[linein.index(' ')+1:] + '*'
+		if debugprint is True:
+			print(('new /me linein '+linein))
+
+	# Throw out malformed lineins
+	if linein.count('<')<1 or linein.count('>')<1:
+		return None
+
+	# Determine the nick
+	name = utilFunctions.findBetween(linein, '<', '>').lower()
+	if name not in namelist:
+		namelist.append(name)
+
+	return {"name":name, "text":linein[linein.index('>')+2:]}
+
+
+# namelist is an output variable
+# returns the number largest number of lines in a row a single nick says
+def processLines(file, namelist):
+	linenumber = 1
+	lines = {}
+	for line in file:
+		lines[linenumber] = cleanupline(line, namelist)
+		if lines[linenumber] is not None:
+			linenumber += 1
+	return lines
+
+
+#
+def getPonyList(namelist, presetList = None):
+	horse_assignments = {}
+	processedNicks = [] # exists to eliminate repeated calls to list(horse_assignments.keys())
+	assignedPonies = [] # exists to eliminate repeated calls to list(horse_assignments.values())
+
+	# 1st round: assign ponies from the preset list
+	for nick in namelist:
+		if nick in processedNicks:
+			continue
+		if nick in list(presetList.keys()):
+			processedNicks.append(nick)
+			horse_assignments[nick] = presetList[nick]
+			assignedPonies.append(presetList[nick])
+
+	print("Pre-assigned ponies "+str(assignedPonies)+" for nicks "+str(processedNicks))
+
+	# 2nd round: assign ponies to the rest of the nicks
+	for nick in namelist:
+		if nick in processedNicks:
+			continue
+		pony = findEmote.select_horse(nick, assignedPonies, unique=(allowDuplicates==False))
+		horse_assignments[nick] = pony
+		assignedPonies.append(pony)
+		processedNicks.append(nick)
+
+	return horse_assignments
+
+
+# lines is an output variable
+def ponies2lines(ponylist, lines):
+	currentName = None
+	mostInRow = 0
+	currentInRow = 1
+
+	# The next 3 lines are the minimal functionality; everything else here is for tracking
+	for line in list(lines.values()):
+		name = line["name"]
+		line["pony"] = ponylist[name]
+
+		# Tracking for other uses later
+		if name == currentName:
+			currentInRow += 1
+			if currentInRow > mostInRow:
+				mostInRow = currentInRow
+		else:
+			currentInARow = 1
+		currentName = name
+
+	return mostInRow
+
+
+
 # processes the chat log for comic generation
 def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugprint=False):
 	global lines
@@ -297,74 +488,41 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 		pprint(allNames)
 	text = ""
 	mostInARow = 1
-	currentName = None
 	currentInARow = 1
 	nameOrder = []
-	ponylist = []
-	for line in file:
-		#if 'Raribot' in line or '> ~' in line:
-		#	continue
-		line = line.strip()
-		line = line.strip('\n')
-		text += line
-		if debugprint is True:
-			print(('line:'+line))
-		if line[:2]=="* " and quitline(line) is False:
-			line=line[2:]
-			line='<'+line[:line.index(' ')]+'> *'+line[line.index(' ')+1:]+'*'
-			if debugprint is True:
-				print(('new line '+line))
-		if line.count('<')<1 or line.count('>')<1:
-			continue
-		name=utilFunctions.findBetween(line,'<','>').lower()
-		if debugprint is True:
-			print(("Looking for name "+name))
-		if name not in nameOrder:
-			nameOrder.append(name)
-		pony=None
-		if name not in allNames:
-			if debugprint is True:
-				print(('name '+str(name)+' not in allnames'))
-			horse_increment = 1
-			while horse_increment != -2:
-				pony=findEmote.getProceduralPony(name*horse_increment)
-				if pony not in ponylist:
-					names[name]=pony
-					allNames[name]=pony
-					ponylist.append(pony)
-					horse_increment = -2
-				else:
-					horse_increment = horse_increment + 1
-					if debugprint is True:
-						print(('pony '+pony+' is already in use; picking a new horse'))
-		else:
-			if debugprint is True:
-				print(('name '+str(name)+' was in allnames'))
-			names[name]=allNames[name]
-			pony=names[name]
-			ponylist.append(pony)
-		line=line[line.index('>')+2:]
-		lines.append({"pony":pony,"name":name,"text":line})
+	linenumber = 1
+	ponylist = list(allNames.values())
 
+	lines = processLines(file, nameOrder)
+	ponyAssignments = getPonyList(nameOrder, allNames)
+	mostInARow = ponies2lines(ponyAssignments, lines)
 
-		if name==currentName:
-			currentInARow+=1
-			if currentInARow>mostInARow:
-				mostInARow=currentInARow
-		else:
-			currentInARow=1
-		currentName=name
 	findEmote.defaultSeed = text
+	generatePanel.names = nameOrder
 
-	#this is a bad hack probably but idk how else to do it without adding a million extra parameters everywhere
-	print('the final names list: ')
-	pprint(names)
-	print(('Empty names? '+str(names=={})))
-	generatePanel.names=names
-	print(('most in a row: '+str(mostInARow)))
-	for line in lines:
-		if anonymousMode:
-			line['text'] = anonymizeText(line['text'])
+	if debugprint is True:
+		print('the final names list: ')
+		pprint(ponyAssignments)
+		print('Order of names')
+		pprint(nameOrder)
+		print(('Empty names? '+str(nameOrder=={})))
+		print(('most in a row: '+str(mostInARow)))
+
+	if anonymousMode:
+		for line in lines:
+			lines[line]['text'] = anonWord(
+				lines[line]['text'],
+				{**allNames, **ponyAssignments},
+				joiner = ' '
+				)
+			if debugprint is True:
+				print("Processed line: "+lines[line]['text'])
+
+
+	# this is a bad hack probably
+	# idk how else to do it without adding a million extra parameters everywhere
+
+
 	#print 'lines:'
 	#pprint(lines)
 	#return
@@ -381,29 +539,43 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 		smallPanels = False
 		panelSize = (300, 300)
 
-	tp = createTitlePanel(panelSize, specifiedTitle)
+	tp = createTitlePanel(panelSize, ponyAssignments, specifiedTitle)
 	print(('generatecomic panelsize: '+str(panelSize)))
 	#tp.show()
 	panels = []
 	panels.append(tp)
-	txtLines = list(lines)
+	txtLines = list(lines.values())
+	txtLines2 = list(lines.values()) # needed for redone opening panels
+	print(txtLines)
 	while len(txtLines) > 0:
 		panels.append(createNextPanel(txtLines,
 			panelSize,
 			smallPanels,
 			nameOrder,
 			selectedBackground))
-	panelsAcross=2
+	panelsAcross = 2
 	if smallPanels:
-		panelsAcross=3
-	if names == {}: #if there's no valid text
-		panels.append(generatePanel.drawPanelNoDialogue({}, selectedBackground, text+str(len(panels))))
+		panelsAcross = 3
 
-	#if it needs an establishing shot with no dialogue
-	if len(panels)%panelsAcross != 0 or names=={}:
-		panels.insert(1,generatePanel.drawPanelNoDialogue(nameOrder[:min(3,len(nameOrder))],selectedBackground,text+str(len(panels))))
+
+	# if it needs an establishing shot with no dialogue
+	# This is the preference for 2-wide comics
+	# 3-wide comics should only have an empty opening shot if two extra panels are needed
+	print(len(panels), panelsAcross)
+	if len(panels) % panelsAcross == 1 or len(nameOrder) == 0:
+		print("Adding establishing shot")
+		horselist = []
+		for name in nameOrder[:min(3,random.randrange(len(nameOrder))+1)]:
+			horselist.append(ponyAssignments[name])
+		panels.insert(
+			1,
+			generatePanel.drawPanelNoDialogue(
+				horselist,
+				selectedBackground,
+				text+str(len(panels))
+			))
 	else: #otherwise redo the first panel as zoomed out
-		txtLines2=list(lines)
+		print("Doing a re-shoot of panel 1")
 		del panels[1]
 		panels.insert(
 			1,
@@ -416,9 +588,19 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 				closeup=False)
 			)
 
-	#if there still aren't enough panels, pad the end
-	while len(panels)%panelsAcross != 0 and names!={}:
-		panels.append(generatePanel.drawPanelNoDialogue(prevNames,selectedBackground,text+str(len(panels))))
+	# if there still aren't enough panels, pad the end
+	while len(panels)%panelsAcross != 0 and nameOrder != {}:
+		print("Adding an end panel")
+		horselist = []
+		for name in prevNames:
+			horselist.append(ponyAssignments[name])
+		if len(horselist) > 1 and utilFunctions.rollOdds(2):
+			horselist = random.shuffle(horselist)[:-1]
+		panels.append(generatePanel.drawPanelNoDialogue(
+			horselist,
+			selectedBackground,
+			str(len(panels))
+			))
 
 	maxWidth = panelSize[0]*panelsAcross
 	currentHeight = 0
@@ -429,6 +611,9 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 	print('panels:')
 	pprint(panels)
 	for panel in panels:
+		if panel is None:
+			print("Skipping bugged-out panel!!!!!!!")
+			continue
 		panel = utilFunctions.possiblyTransform(panel, 999) # Around 1/200 strips will have a flipped panel
 		box = (
 			currentWidth,

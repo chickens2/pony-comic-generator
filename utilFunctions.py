@@ -338,5 +338,15 @@ def pickfileIndex(inputfolder, bad_files):
 		return inputfolder, directoryList, location
 
 
+# roll for a color
+def rollColor(avgR, avgG, avgB, darkness):
+	return (
+		triangularInt(0, 256, avgR),
+		triangularInt(0, 256, avgG),
+		triangularInt(0, 256, avgB),
+		triangularInt(0, 256, darkness)
+		)
+
+
 
 transform_D, undoTransform_D = genTransformDict()

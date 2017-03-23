@@ -2,11 +2,13 @@ This is a program for generating comics from chat text, inspired by Microsoft Co
 
 ##Installation
 
-1. Install Python 2.7
+1. Install Python 3.6 or newer.
 2. Install dependencies (listed in `requirements.txt`). 
   * You can do this by installing `pip` and navigating to this directory in the command line and doing the command: `pip3 install -r requirement.txt`
+3. Copy one of the preset config files in the `configs/` folder to `config.cfg` in the root folder of this project and make any changes you'd like.
 
 N.B. If typing `python` or `pip` in the command line gives an error even after installing and you're using Windows, you might have to add them to the path. Look up 'how add to windows path'.
+
 
 
 ##Usage
