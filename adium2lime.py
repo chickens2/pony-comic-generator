@@ -19,8 +19,8 @@ Output is "hh:mm:ss name: message" (with the colon omitted for /me statements)
 use -l to specify a single file or -o to convert an entire folder and its subdirectories
 
 NOTE 1: this assumes all files within the root folder are either system junk_files or .xml logs
-NOTE 2: THIS USES PYTHON3!!!!!  It otherwise crashes when parsing usernames with non-ASCII characters
-NOTE 3: This is not exactly the same as native LimeChat logs, since this one actually differentiates /me lines from other lines
+NOTE 3: This is not exactly the same as native LimeChat logs, since this one actually differentiates /me lines from other lines by the omission of the colon
+NOTE 4: this assumes that only one outupt log will exist for any given minute
 '''
 
 
@@ -59,8 +59,9 @@ def convertmessage(msg):
 	date = d8time[:10]
 	if message is None:
 		message = ""
-		for stripped in msg.div.span.stripped_strings:
-			message = message + ' ' + stripped
+		if 'span' in msg.div.children: # deal with empty messages
+			for stripped in msg.div.span.stripped_strings:
+				message = message + ' ' + stripped
 	msgsep = ""
 	# the len(message) > 0 is needed to prevent problems with blank lines that people sent
 	if len(message) > 0 and message[0] == '*' and message[-1] == '*': # /me command
@@ -114,6 +115,7 @@ def clean_directory_from_filename(fullname, rootdir):
 
 
 def convert_and_save(inputfile, outputdirectory, inputpath = None):
+	print("Processing "+inputfile)
 	directory = ''
 	if inputpath is not None:
 		directory = clean_directory_from_filename(inputfile, inputpath)
@@ -128,8 +130,12 @@ def convert_and_save(inputfile, outputdirectory, inputpath = None):
 		nameout = os.path.join(outputdirectory, day + '_' + fname + '.txt')
 
 		if os.path.isfile(nameout):
-			print("File "+nameout+" already exists!")
-			continue
+			print("File "+nameout+" already exists!  Renaming…")
+			with open(nameout, 'r') as f:
+				first_time = f.readline().split(' ')[0].replace(':', '')[:-2]
+			os.rename(nameout, nameout[:-4]+'~'+first_time+'.txt')
+			first_time = lines2save[day][0].split(' ')[0].replace(':', '')[:-2]
+			nameout = nameout[:-4]+'~'+first_time+'.txt'
 
 		outfile = open(nameout, 'w')
 		for line in lines2save[day]:
