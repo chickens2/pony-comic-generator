@@ -3,7 +3,6 @@ pyperclip
 imgurpython
 python-resize-image
 praw
-BeautifulSoup
 lxml
 request
 
