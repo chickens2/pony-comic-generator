@@ -327,7 +327,7 @@ def soloURL(line):
 # similar to pickNestedFile but returns a directory, the directory list, and an index
 # assumes that at least one good file exists within the deepest subdirectory
 def pickfileIndex(inputfolder, bad_files):
-	file=None
+	file = None
 	directoryList = os.listdir(inputfolder)
 	while file is None or file in bad_files:
 		location = random.randint(0, len(directoryList)-1)

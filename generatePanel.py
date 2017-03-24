@@ -376,7 +376,7 @@ def drawPanelNoDialogue(names, backgroundName, seed, iscloseup=False):
 			names[2]+seed,
 			backgroundName,
 			iscloseup))
-	print("No ponies have been passed to me! "+str(names))
+	print(("No ponies have been passed to me! "+str(names)))
 	return drawBorder(getBackgroundImage(backgroundName, False))
 
 

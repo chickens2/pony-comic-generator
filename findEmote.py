@@ -136,9 +136,9 @@ def select_horse(nickname, ponylist, unique=False, increment=1):
 	word = ""
 	if unique is True:
 		word = "unique "
-	print("Picking "+word+"pony for "+nickname+", take "+str(increment))
+	print(("Picking "+word+"pony for "+nickname+", take "+str(increment)))
 	pony = getProceduralPony(nickname*increment)
-	print("Trying "+pony)
+	print(("Trying "+pony))
 	if unique is False or increment > 12 or pony not in ponylist:
 		ponylist.append(pony)
 		return pony

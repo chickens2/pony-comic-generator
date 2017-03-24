@@ -115,7 +115,7 @@ def clean_directory_from_filename(fullname, rootdir):
 
 
 def convert_and_save(inputfile, outputdirectory, inputpath = None):
-	print("Processing "+inputfile)
+	print(("Processing "+inputfile))
 	directory = ''
 	if inputpath is not None:
 		directory = clean_directory_from_filename(inputfile, inputpath)
@@ -130,7 +130,7 @@ def convert_and_save(inputfile, outputdirectory, inputpath = None):
 		nameout = os.path.join(outputdirectory, day + '_' + fname + '.txt')
 
 		if os.path.isfile(nameout):
-			print("File "+nameout+" already exists!  Renaming…")
+			print(("File "+nameout+" already exists!  Renaming…"))
 			with open(nameout, 'r') as f:
 				first_time = f.readline().split(' ')[0].replace(':', '')[:-2]
 			os.rename(nameout, nameout[:-4]+'~'+first_time+'.txt')
