@@ -482,11 +482,11 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 	global transform_D
 	global undoTransform_D
 	transform_D,undoTransform_D = utilFunctions.genTransformDict()
-	#findEmote.defaultSeed="".join(file)
 	if debugprint is True:
 		print('original allnames:')
 		pprint(allNames)
-	text = ""
+	text = ''.join(file)
+	findEmote.defaultSeed = text
 	mostInARow = 1
 	currentInARow = 1
 	nameOrder = []
@@ -497,7 +497,6 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 	ponyAssignments = getPonyList(nameOrder, allNames)
 	mostInARow = ponies2lines(ponyAssignments, lines)
 
-	findEmote.defaultSeed = text
 	generatePanel.names = nameOrder
 
 	if debugprint is True:
@@ -595,7 +594,8 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 		for name in prevNames:
 			horselist.append(ponyAssignments[name])
 		if len(horselist) > 1 and utilFunctions.rollOdds(2):
-			horselist = random.shuffle(horselist)[:-1]
+			random.shuffle(horselist)
+			horselist = horselist[:-1]
 		panels.append(generatePanel.drawPanelNoDialogue(
 			horselist,
 			selectedBackground,
