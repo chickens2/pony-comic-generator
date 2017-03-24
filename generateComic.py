@@ -654,7 +654,7 @@ def main():
 		clipboard = pyperclip.paste()
 		if debugprint is True:
 			print(('clipboard is: \n' + str(clipboard)))
-		chatfile = io.StringIO(clipboard)
+		chatfile = io.StringIO(clipboard).readlines()
 		random.seed(clipboard)
 	else:
 		chatfile = open(textFileChat).readlines()
