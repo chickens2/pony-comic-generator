@@ -2,11 +2,13 @@ This is a program for generating comics from chat text, inspired by Microsoft Co
 
 ##Installation
 
-1. Install Python 2.7
+1. Install Python 3.6 or newer.
 2. Install dependencies (listed in `requirements.txt`). 
-  * You can do this by installing `pip` and navigating to this directory in the command line and doing the command: `pip install -r requirement.txt`
+  * You can do this by installing `pip` and navigating to this directory in the command line and doing the command: `pip3 install -r requirement.txt`
+3. Copy one of the preset config files in the `configs/` folder to `config.cfg` in the root folder of this project and make any changes you'd like.
 
 N.B. If typing `python` or `pip` in the command line gives an error even after installing and you're using Windows, you might have to add them to the path. Look up 'how add to windows path'.
+
 
 
 ##Usage
@@ -22,9 +24,6 @@ When run from the command line you can specify a file containing IRC text instea
 ## Technical Notes
 
 * Images in the backgrounds folder really don't need to be any larger than 500px in any dimension.  Install `ImageMagick` and use `convert <imagename> -resize "500^>" <newname>` to scale the images down a bit.  Further optimisation may be used with the `jpegoptim` and `optipng` commands.
-* The program currently completely chokes up if there are any non-image entities in the backgrounds folder.  This means:
-	1. Mac users need to make sure there aren't any `.DS_Store` or `.trashes` files there.  Use `rm backgrounds/.DS_Store` if you receive complaints about that file.
-	2. You can't put subfolders in the backgrounds directory or else the program poops its pants. 💩
 * Symlinks *do* work in the backgrounds folder.  Please don't send in a PR containing symlinks.
 * Options for `shuffle_mode`:
 	* `0`: pony is procedurally-chosen from the username, except for the ones defined in the config file
@@ -33,6 +32,8 @@ When run from the command line you can specify a file containing IRC text instea
 * `closeup_zoom` affects both the characters and the background
 * In the Backgrounds section of the config file, you may use subfolders, such as `Custom/Test12`.  Put all the backgrounds that you like into the custom folder if you don't want them to be committed back to the repository.
 * If you are having problems with "Not a real JPEG" on symlinked files, make sure they are real soft links and not Mac aliases.  [This automator workflow](http://blog.poynton.ca/?p=281) lets you select all your aliased files in Finder and then batch-convert them in a right-click menu.
+* `generateComic.py` is the driver for the comic generation, the actual heavy lifting is done in `makeComic.py`
+* If you use emoji in your output, please use [Symbolia](http://users.teilar.gr/%7Eg1951d/) for the best results
 
 ## [Future Plans](./roadmap.md)
 

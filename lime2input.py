@@ -4,9 +4,10 @@
 # vim: set fileencoding=UTF-8 :
 
 import pyperclip
-import StringIO
+import io
 import sys
 import os
+sys.path.append("..")
 import utilFunctions
 import string
 import random
@@ -16,6 +17,8 @@ Converts LimeChat-formatted logs into the expected format for the comic parses
 Makes intelligent guesses at what should become a /me statement, since those aren't stored by LimeChat
 If input/output filenames aren't specified, the clipboard will suffice for the missing filename
 Expected format is "hh:mm username: message" for input files
+
+USES PYTHON 3!!!!!!
 
 
 
@@ -140,15 +143,15 @@ def processLine(name, message, guessstrat):
 		return assembleMeLine(name, message) # will probably want a backspace character as well so things render nicely, but that may break the parser
 	# turn guessstrat into an actual workable list
 	options = utilFunctions.decomposeNumericComponents(guessstrat,3)
-	random.seed(str(message)+name)
+	random.seed(str(message) + name)
 	# optionally squish ALL CAPS messages
 	ALLCAPS = wordlistIsUpper(message, True)
-	if 27 in options.keys() and ALLCAPS:
+	if 27 in list(options.keys()) and ALLCAPS:
 		message = lowerwordlist(message)
 
 	# question test
 	if message[-1][-1] == '?' and ( # if it's a question and…
-		9 not in options.keys() or ( # you didn't say you want it checked or…
+		9 not in list(options.keys()) or ( # you didn't say you want it checked or…
 			options[9] == 2 and utilFunctions.rollOdds(2) # you said to check it randomly
 		)
 	):
@@ -177,7 +180,7 @@ def checkWordsForMe(words, options):
 
 	# deal with initial capital letter
 	if words[0][0].isupper() and ( # if it starts with a capital letter and…
-		3 not in options.keys() or ( # you said not to bother with lines opening with capitals or…
+		3 not in list(options.keys()) or ( # you said not to bother with lines opening with capitals or…
 			options[3] == 2 and utilFunctions.rollOdds(2) # you want capitalized lines to be checked randomly
 		)
 	):
@@ -239,19 +242,22 @@ def assembleNormalLine(name, messagewords):
 Return to the imperative part of the program from here on
 """
 
-chatfile = None
-if limeLog is None:
-	clipboard = pyperclip.paste().encode('utf8')
-	chatfile = StringIO.StringIO(clipboard)
-else:
-	chatfile = open(limeLog).readlines()
+def main():
+	chatfile = None
+	if limeLog is None:
+		clipboard = pyperclip.paste()
+		chatfile = io.StringIO(clipboard)
+	else:
+		chatfile = open(limeLog).readlines()
 
+	newlog = convertLimelog(chatfile, guessstrat)
 
-newlog = convertLimelog(chatfile, guessstrat)
+	if outputLog is None:
+		pyperclip.copy("".join(newlog))
+	else:
+		file = open(outputLog, 'w')
+		file.writelines(newlog)
+		file.close()
 
-if outputLog is None:
-	pyperclip.copy("".join(newlog))
-else:
-	file = open(outputLog, 'w')
-	file.writelines(newlog)
-	file.close()
+if __name__ == "__main__":
+	main()
