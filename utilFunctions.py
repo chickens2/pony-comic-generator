@@ -54,7 +54,9 @@ def isCorrectOrder(txtLine1, txtLine2, nameorder):
 # picks a file from a directory
 # if the file is also a directory, pick a file from the new directory
 # this might choke up if it encounters a directory only containing invalid files
-def pickNestedFile(directory, bad_files):
+def pickNestedFile(directory, bad_files, seed=None):
+	if seed is not None:
+		random.seed(seed)
 	file = None
 	while file is None or file in bad_files:
 		file = random.choice(os.listdir(directory))
@@ -77,14 +79,18 @@ def imageFlip(image):
 		return image.transpose(tr) # 2 passes for best results
 
 # rolls an n-sided die and lets you know if the result is 0
-def rollOdds(n):
+def rollOdds(n, seed=None):
+	if seed is not None:
+		random.seed(seed)
 	n = int(n) # in case you're some wiseguy who uses a non-int to get yourself an error
 	if n < 1:
 		return false # rolling a die with no sides or negative sides will return false, rather than an error (for now)
 	return random.randint(0, n-1) == 0
 
 # give a float decimal for odds
-def rollFraction(odds):
+def rollFraction(odds, seed=None):
+	if seed is not None:
+		random.seed(seed)
 	if odds > 1:
 		return random.random() < (1.0/float(odds))
 	else:
@@ -130,7 +136,9 @@ def getTransform(allowNothing=None):
 
 # formerly the guts of getTranform, back when that was part of generatePanel.py
 # Picks from a weighted probability dictionary
-def weightedDictPick(weightedDict, increasedNoneWeight=0):
+def weightedDictPick(weightedDict, increasedNoneWeight=0, seed=None):
+	if seed is not None:
+		random.seed(seed)
 	return weightedDict.get(
 		random.randint(
 			1,
@@ -206,8 +214,11 @@ def circle(draw, center, radius):
 
 
 # This could be replaced with a Gaussian distribution with hard limits slapped on
-def triangularInt(low,high,mode):
-	return int(random.triangular(low,high,mode))
+# This also has some inconsistent behavior about whether or not it will ever return high
+def triangularInt(low, high, mode, seed=None):
+	if seed is not None:
+		random.seed(seed)
+	return int(random.triangular(low, high, mode))
 
 
 # Populates a dictionary for random selection with weights from another dictionary
@@ -326,8 +337,10 @@ def soloURL(line):
 
 # similar to pickNestedFile but returns a directory, the directory list, and an index
 # assumes that at least one good file exists within the deepest subdirectory
-def pickfileIndex(inputfolder, bad_files):
-	file=None
+def pickfileIndex(inputfolder, bad_files, seed=None):
+	if seed is not None:
+		random.seed(seed)
+	file = None
 	directoryList = os.listdir(inputfolder)
 	while file is None or file in bad_files:
 		location = random.randint(0, len(directoryList)-1)

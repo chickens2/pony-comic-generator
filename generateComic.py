@@ -60,6 +60,7 @@ closeupMultiplier = config.getfloat('Options','closeup_zoom')
 allowDuplicates = config.get('Options','allow_duplicates').upper()=='TRUE'
 rainbowCast = config.get('Options','rainbow_cast').upper()=='TRUE'
 debugprint = config.get('Options','terminal_debug').upper()=='TRUE'
+defaultseed = config.get('Options','default_seed')
 
 if debugprint is True:
 	print('Verbose mode activated!')
@@ -156,10 +157,12 @@ def anonWord(wordIn, nameList, joiner='', recheck=True):
 
 
 # Pick a title for the strip
-def getTitle(specifiedTitle=None):
+def getTitle(specifiedTitle=None, seed=None):
 	if specifiedTitle is not None:
 		return specifiedTitle
-	random.seed(allText)
+	if seed is None:
+		seed = defaultseed
+	random.seed(seed)
 	title = None
 	if len(lines) == 0:
 		line = ""
@@ -179,7 +182,10 @@ def getTitle(specifiedTitle=None):
 
 # Makes the title panel
 def createTitlePanel(panelSize, castlist, specifiedTitle=None):
-	title = getTitle(specifiedTitle)
+	title = getTitle(
+		specifiedTitle,
+		"+".join(list(castlist.keys())) + ':'.join(list(castlist.values()))
+		)
 	img = Image.new("RGBA", panelSize, (255,255,255)) # white background
 	d = ImageDraw.Draw(img)
 	newh = utilFunctions.drawCenteredText(25, title, d, fntLarge, panelSize)
@@ -345,6 +351,8 @@ def createNextPanel(txtLines, panelSize, smallPanels, nameorder, selectedBackgro
 
 # selects which background image to use
 def selectBackground(seed, specifiedBackground=None):
+	if seed is None:
+		seed = defaultseed
 	random.seed(seed)
 	if specifiedBackground is not None: # let command-line switches specify a background
 		if debugprint is True:
@@ -557,6 +565,12 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 		panelsAcross = 3
 
 
+	# Set random seed for the rest of this function
+	if len(nameOrder) > 0:
+		random.seed(selectedBackground.join(nameOrder))
+	else:
+		random.seed(defaultseed)
+
 	# if it needs an establishing shot with no dialogue
 	# This is the preference for 2-wide comics
 	# 3-wide comics should only have an empty opening shot if two extra panels are needed
@@ -591,6 +605,7 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 	while len(panels)%panelsAcross != 0 and nameOrder != {}:
 		print("Adding an end panel")
 		horselist = []
+		random.seed(str(prevNames))
 		for name in prevNames:
 			horselist.append(ponyAssignments[name])
 		if len(horselist) > 1 and utilFunctions.rollOdds(2):

@@ -18,6 +18,7 @@ global charHeightCloseup
 charHeight = None
 charHeightCloseup = None #charHeight*closeupMultiplier
 names = {} #should mirror generatecomic name dictionary
+spaceFromEdge = [5,5]
 
 # set the panel size from another module
 def setPS(ps, info):
@@ -141,8 +142,10 @@ def getBackgroundImage(backgroundName,closeup=False):
 #
 #countereiorg=0
 def getCharacterImage(name1, dialog1, transpose, imMaxLength, imheight=None):
+	if dialog1 is None:
+		print("No dialogue sent to the emote!!!  Using the default seed.")
 	if imheight is None:
-		imheight = im.size[1]*imMaxLength/im.size[0]
+		imheight = im.size[1]*imMaxLength//im.size[0]
 	imheight = int(imheight) # catch any previous problems
 	global countereiorg
 	im = None
@@ -153,32 +156,36 @@ def getCharacterImage(name1, dialog1, transpose, imMaxLength, imheight=None):
 	return im
 
 #
-def hasRoomForDialogue3(dialog1,dialog2,dialog3):
-	lines1=insertLineBreaks(dialog1,getBubbleLength()/fontPixelWidth).count('\n')+1
-	lines2=insertLineBreaks(dialog2,getBubbleLength()/fontPixelWidth).count('\n')+1
-	lines3=insertLineBreaks(dialog3,getBubbleLength()/fontPixelWidth).count('\n')+1
+def hasRoomForDialogue3(dialog1, dialog2, dialog3):
+	lines1 = insertLineBreaks(dialog1, getBubbleLength()//fontPixelWidth).count('\n')+1
+	lines2 = insertLineBreaks(dialog2, getBubbleLength()//fontPixelWidth).count('\n')+1
+	lines3 = insertLineBreaks(dialog3, getBubbleLength()//fontPixelWidth).count('\n')+1
 	print(('hasroomfordialogue numlines '+str(lines1+lines2+lines3)))
-	totalLines=lines1+lines2+lines3
-	if panelSize[1]<201:
-		return totalLines<4
-	if panelSize[1]<301:
-		return totalLines<8
-	if panelSize[1]<401:
-		return totalLines<13
+	totalLines = lines1 + lines2 + lines3
+	if panelSize[1] < 201:
+		return totalLines < 4
+	if panelSize[1] < 301:
+		return totalLines < 8
+	if panelSize[1] < 401:
+		return totalLines < 13
+	print(("Panelsize of "+str(panelsize)+" does not have a defined line limit; defaulting to 17"))
+	return totalLines < 17
 
 #
 def hasRoomForDialogue2(dialog1,dialog2):
-	lines1=insertLineBreaks(dialog1,getBubbleLength()/fontPixelWidth).count('\n')+1
-	lines2=insertLineBreaks(dialog2,getBubbleLength()/fontPixelWidth).count('\n')+1
+	lines1 = insertLineBreaks(dialog1, getBubbleLength()//fontPixelWidth).count('\n')+1
+	lines2 = insertLineBreaks(dialog2, getBubbleLength()//fontPixelWidth).count('\n')+1
 	print(('hasroomfordialogue numlines '+str(lines1+lines2)))
-	totalLines=lines1+lines2
-	if panelSize[1]<201:
-		return totalLines<5
-	if panelSize[1]<301:
-		return totalLines<11
-	if panelSize[1]<401:
-		return totalLines<15
-spaceFromEdge=[5,5]
+	totalLines = lines1 + lines2
+	if panelSize[1] < 201:
+		return totalLines < 5
+	if panelSize[1] < 301:
+		return totalLines < 11
+	if panelSize[1] < 401:
+		return totalLines < 15
+	print(("Panelsize of "+str(panelsize)+" does not have a defined line limit; defaulting to 21"))
+	return totalLines < 21
+
 
 #
 def getBubbleLength():
