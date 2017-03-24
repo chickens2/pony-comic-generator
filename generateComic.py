@@ -49,9 +49,9 @@ config = configparser.ConfigParser(inline_comment_prefixes=(';',))
 config.readfp(open('config.cfg'))
 
 # Load things from the config file
-selectedBackground=None
-fntLarge = ImageFont.truetype(config.get('Fonts','title_font'),int(config.get('Fonts','title_size'))) #used for the title
-fntSmall = ImageFont.truetype(config.get('Fonts','cast_font'),int(config.get('Fonts','cast_size'))) #used for the list of characters
+selectedBackground = None
+fntLarge = ImageFont.truetype(config.get('Fonts','title_font'), int(config.get('Fonts','title_size'))) # used for the title
+fntSmall = ImageFont.truetype(config.get('Fonts','cast_font'), int(config.get('Fonts','cast_size'))) # used for the list of characters
 anonymousMode = config.get('Options','anonymous_mode').upper()=='TRUE'
 uploadImgur = config.get('Options','upload_imgur').upper()=='TRUE'
 castIntro = config.get('Options','cast_introduction')
@@ -60,6 +60,7 @@ closeupMultiplier = config.getfloat('Options','closeup_zoom')
 allowDuplicates = config.get('Options','allow_duplicates').upper()=='TRUE'
 rainbowCast = config.get('Options','rainbow_cast').upper()=='TRUE'
 debugprint = config.get('Options','terminal_debug').upper()=='TRUE'
+removebot = config.get('Options','remove_bot_commands').upper()=='TRUE'
 
 if debugprint is True:
 	print('Verbose mode activated!')
@@ -105,9 +106,9 @@ if __name__ == "__main__":
 		)
 	except:
 		print('could not retrieve default alias list, using local version')
-	config2 = configparser.ConfigParser()
-	config2.readfp(open('DEFAULT_ALIAS_DO_NOT_EDIT.cfg'))
-	allNames=dict(config2.items('Aliases'))
+config2 = configparser.ConfigParser()
+config2.readfp(open('DEFAULT_ALIAS_DO_NOT_EDIT.cfg'))
+allNames = dict(config2.items('Aliases'))
 
 # Set up names list
 allText = ""
@@ -123,37 +124,6 @@ if debugprint is True:
 names = {}
 
 
-# Recursively searches through lines of text to
-# remove any words found in nameList.keys() and replace
-# them with the corresponding value
-def anonWord(wordIn, nameList, joiner='', recheck=True):
-	masterNameList = {}
-	if debugprint is True:
-		print(('considering: '+wordIn))
-
-	# Don't bother if the word is too short
-	if len(wordIn) < 4:
-		return wordIn
-
-	if recheck is False:
-		if nameList.get(wordIn.lower(), None) is not None:
-			print(("removing a name " + wordIn))
-			return nameList[wordIn.lower()][1:] # [1:] to get rid of the + in dialogue
-		return wordIn
-
-	if joiner != '': # special case for how to parse space-delimited words
-		print("Splitting into words delimited by \'"+joiner+"\'")
-		parts = wordIn.split(joiner)
-		recheck = True
-	else:
-		parts = re.findall(r"\w+|[^\w\s]", wordIn, re.UNICODE)
-		recheck = False
-	newparts = []
-	for part in parts:
-		newparts.append(anonWord(part, nameList, recheck=recheck))
-	return joiner.join(newparts)
-
-
 
 # Pick a title for the strip
 def getTitle(specifiedTitle=None):
@@ -164,8 +134,8 @@ def getTitle(specifiedTitle=None):
 	if len(lines) == 0:
 		line = ""
 	else:
-		line = random.choice(list(lines.keys()))
-		words = lines[line]['text'].split(" ")
+		line = random.choice(lines)
+		words = line['text'].split(" ")
 		if len(words) > 5:
 			words = words[-5:]
 		while len(words) > 2 and random.random() > 0.4:
@@ -364,61 +334,21 @@ def selectBackground(seed, specifiedBackground=None):
 			print(("Choosing from directory " + directory))
 		return utilFunctions.pickNestedFile('backgrounds/' + directory, BAD_FILES)
 
-# check for joined/quit messaegs and remove them
-def quitline(line):
-	quitmessage = [
-		'(Quit:',
-		'has joined (',
-		'has left IRC (',
-		'has changed mode:',
-		'You have joined',
-		'set the topic'
-	]
-	for msg in quitmessage:
-		if msg in line:
-			return True
-	return False
-
-#
-def cleanupline(linein, namelist):
-	# Skip Raribot commands
-	#if 'Raribot' in linein or '> ~' in linein:
-	#	continue
-
-	# Cleanup the line
-	linein = linein.strip()
-	linein = linein.strip('\n')
-	if debugprint is True:
-		print(('line:'+linein))
-
-	# Process /me commands
-	if linein[:2] == "* " and quitline(linein) is False:
-		linein = linein[2:]
-		linein = '<' + linein[:linein.index(' ')] + '> *' + linein[linein.index(' ')+1:] + '*'
-		if debugprint is True:
-			print(('new /me linein '+linein))
-
-	# Throw out malformed lineins
-	if linein.count('<')<1 or linein.count('>')<1:
-		return None
-
-	# Determine the nick
-	name = utilFunctions.findBetween(linein, '<', '>').lower()
-	if name not in namelist:
-		namelist.append(name)
-
-	return {"name":name, "text":linein[linein.index('>')+2:]}
-
 
 # namelist is an output variable
 # returns the number largest number of lines in a row a single nick says
 def processLines(file, namelist):
-	linenumber = 1
-	lines = {}
+	ignored_users = config.get('Ignore', 'ignored_nicks').split()
+	lines = []
 	for line in file:
-		lines[linenumber] = cleanupline(line, namelist)
-		if lines[linenumber] is not None:
-			linenumber += 1
+		newline = utilFunctions.cleanupline(
+			line,
+			namelist,
+			ignored_users=ignored_users,
+			params={'debug':debugprint,'bot':removebot}
+			)
+		if newline is not None:
+			lines.append(newline)
 	return lines
 
 
@@ -430,18 +360,21 @@ def getPonyList(namelist, presetList = None):
 
 	# 1st round: assign ponies from the preset list
 	for nick in namelist:
+		nick = nick.lower()
 		if nick in processedNicks:
 			continue
-		if nick in list(presetList.keys()):
+		if nick in {prenick.lower() for prenick in presetList}:
 			processedNicks.append(nick)
-			horse_assignments[nick] = presetList[nick]
-			assignedPonies.append(presetList[nick])
+			horsepick = presetList[nick]
+			horse_assignments[nick] = horsepick
+			assignedPonies.append(horsepick)
 
-	print("Pre-assigned ponies "+str(assignedPonies)+" for nicks "+str(processedNicks))
+	print(("Pre-assigned ponies "+str(assignedPonies)+" for nicks "+str(processedNicks)))
 
 	# 2nd round: assign ponies to the rest of the nicks
 	for nick in namelist:
-		if nick in processedNicks:
+		nick = nick.lower()
+		if nick.lower() in processedNicks:
 			continue
 		pony = findEmote.select_horse(nick, assignedPonies, unique=(allowDuplicates==False))
 		horse_assignments[nick] = pony
@@ -458,7 +391,10 @@ def ponies2lines(ponylist, lines):
 	currentInRow = 1
 
 	# The next 3 lines are the minimal functionality; everything else here is for tracking
-	for line in list(lines.values()):
+	for line in lines:
+		if line is None:
+			print("Skipping junk line")
+			continue
 		name = line["name"]
 		line["pony"] = ponylist[name]
 
@@ -510,13 +446,14 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 
 	if anonymousMode:
 		for line in lines:
-			lines[line]['text'] = anonWord(
-				lines[line]['text'],
+			line['text'] = utilFunctions.anonWord(
+				line['text'],
 				{**allNames, **ponyAssignments},
-				joiner = ' '
+				joiner = ' ',
+				debugprint = debugprint
 				)
 			if debugprint is True:
-				print("Processed line: "+lines[line]['text'])
+				print(("Processed line: "+line['text']))
 
 
 	# this is a bad hack probably
@@ -544,15 +481,17 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 	#tp.show()
 	panels = []
 	panels.append(tp)
-	txtLines = list(lines.values())
-	txtLines2 = list(lines.values()) # needed for redone opening panels
+	txtLines = lines # rename here since there seems to be a naming convention shift
+	txtLines2 = lines[:99] # needed for redone opening panels.  All those extra lines are to get it to work properly—unexpected results may occur if your comic is over 99 lines long
 	print(txtLines)
 	while len(txtLines) > 0:
-		panels.append(createNextPanel(txtLines,
+		panels.append(createNextPanel(
+			txtLines,
 			panelSize,
 			smallPanels,
 			nameOrder,
-			selectedBackground))
+			selectedBackground
+			))
 	panelsAcross = 2
 	if smallPanels:
 		panelsAcross = 3
@@ -561,7 +500,7 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 	# if it needs an establishing shot with no dialogue
 	# This is the preference for 2-wide comics
 	# 3-wide comics should only have an empty opening shot if two extra panels are needed
-	print(len(panels), panelsAcross)
+	print((str(len(panels))+" panels, "+str(panelsAcross)+" wide"))
 	if len(panels) % panelsAcross == 1 or len(nameOrder) == 0:
 		print("Adding establishing shot")
 		horselist = []

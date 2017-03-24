@@ -9,13 +9,14 @@ Takes an input folder and generates a comic on a random line selection from a ra
 """
 
 import pyperclip
-import StringIO
+import io
 import sys
 import os
+import configparser
 import utilFunctions
 import string
 import random
-from makeComic import processChatLog
+from generateComic import processChatLog
 from lime2input import convertLimelog
 
 """
@@ -57,14 +58,20 @@ for arg in sys.argv:
 				forceseed = True
 		nextToFill = None
 if inputfolder is None:
-	print "Need to know where the chatlogs are"
+	print("Need to know where the chatlogs are")
 	sys.exit(1)
 if bigseed is not None:
 	random.seed(bigseed)
-if forcelines < 1:
+if forcelines is not None and forcelines < 1:
 	forcelines = None
 
 
+config = configparser.ConfigParser(inline_comment_prefixes=(';',))
+config.readfp(open('config.cfg'))
+
+badfiles = config.get('Ignore','banned_backgrounds').split()
+skipname = config.get('Ignore','ignored_nicks').split()
+removebot = config.get('Options','remove_bot_commands').upper()=='TRUE'
 
 
 # pick the number of lines of use
@@ -102,25 +109,28 @@ if forcelines is None:
 	length = picklines(seed)
 else:
 	length = forcelines
-print "Choosing "+str(length)+" lines"
+print(("Choosing "+str(length)+" lines"))
 
 # Pick a file
-
-badfiles = ['.trashes', '.DS_Store', 'thumbs.db']
 inputfolder, filelist, logloc = utilFunctions.pickfileIndex(inputfolder, badfiles)
-print "Starting at index "+str(logloc)+" of "+str(filelist)+" from "+inputfolder
+print(("Starting at index "+str(logloc)+" of "+str(filelist)+" from "+inputfolder))
 if needlime is True:
-	print "TAKING A MOMENT TO CONVERT"
+	print("TAKING A MOMENT TO CONVERT")
 
 content = getcontent(inputfolder+'/'+filelist[logloc], needlime)
 start = random.randint(0, len(content)-1)
-print "Starting at line #"+str(start)
+print(("Starting at line #"+str(start)))
 
 # Run with it
 selectedlines = []
 while length > 0:
 	line = content[start]
-	if utilFunctions.quitline(line) is False and utilFunctions.soloURL(' '.join(line.split(' ')[1:])) is False:
+	if (utilFunctions.quitline(line) is False and
+			line is not None and
+			line != '\n' and
+			len(line) > 1 and
+			utilFunctions.cleanupline(line, [], ignored_users=skipname, params={'bot':removebot,'debug':False}) is not None and
+			utilFunctions.soloURL(' '.join(line.split(' ')[1:])) is False):
 		selectedlines.append(line)
 		length -= 1
 	start += 1
@@ -128,30 +138,30 @@ while length > 0:
 	if start == len(content):
 		start = 0
 		found = False
-		print "Found end of file, trying for the next log"
+		print("Found end of file, trying for the next log")
 		while found is False:
 			logloc += 1
 			# if you've reached the end of the folder, stop processing files
 			if logloc == len(filelist):
 				length = 0
-				print "Reached end of directory: stopping here"
+				print("Reached end of directory: stopping here")
 				break
 			# skip the junk files
 			nextfile = filelist[logloc]
 			if nextfile in badfiles:
-				print "Skipping junk file "+nextfile
+				print(("Skipping junk file "+nextfile))
 				continue
 			# skip any directories
 			if os.path.isdir(os.path.join(inputfolder, nextfile)) is True:
-				print "Skipping directory "+nextfile
+				print(("Skipping directory "+nextfile))
 				continue
 			content = getcontent(inputfolder+'/'+filelist[logloc], needlime)
-			print "Continuing with "+nextfile
+			print(("Continuing with "+nextfile))
 			found = True
 
 
 
-print selectedlines
+print(selectedlines)
 
 processChatLog(selectedlines)
 
