@@ -17,23 +17,25 @@ config.readfp(open('config.cfg'))
 
 
 #
-defaultSeed=config.get('Options','default_seed') #RAND0m_XD or something or whatever
-MIN_LENGTH=config.getint('Options','emotional_diversity') #minimum number of emotes for a tag to be valid
-emotesByName={}
-emotesByPony={}
-BANNED_TAGS=config.get('Ignore','banned_tags').split()
-emoteMetadata={}
+defaultSeed = config.get('Options','default_seed') #RAND0m_XD or something or whatever
+MIN_LENGTH = config.getint('Options','emotional_diversity') #minimum number of emotes for a tag to be valid
+
+emotesByName = {}
+emotesByPony = {}
+BANNED_TAGS = config.get('Ignore','banned_tags').split()
+emoteMetadata = {}
+
 for file in os.listdir('tagAssignments'):
 	#print 'tagassignments file:'+file
 	with open('tagAssignments/'+file) as data_file:
 		data = json.load(data_file)
 		emoteMetadata.update(data)
 for fn in os.listdir('emotes'):
-	data=None
+	data = None
 	with open('emotes/'+fn) as data_file:
 		data = json.load(data_file)
 		for key in list(data.keys()):
-			value=data[key]
+			value = data[key]
 			if 'Emotes' not in value or '' not in value['Emotes']:
 				del data[key]
 				continue
@@ -44,31 +46,36 @@ for fn in os.listdir('emotes'):
 			else:
 				del data[key]
 			if 'Offset' in value['Emotes']['']:
-				offset=value['Emotes']['']['Offset']
-				if offset[0]>0 or offset[1]>0:
+				offset = value['Emotes']['']['Offset']
+				if offset[0] > 0 or offset[1] > 0:
 					del data[key]
 				else:
-					offset[0]=offset[0]*-1
-					offset[1]=offset[1]*-1
+					offset[0] = offset[0]*-1
+					offset[1] = offset[1]*-1
 	emotesByName.update(data)
 for fn in os.listdir('tags'):
-	data=None
+	data = None
 	with open('tags/'+fn) as data_file:
 		data = json.load(data_file)
 	for key, value in list(data.items()):
-		if key in emotesByName and len(value)==1:
-			emotes=set()
+		if key in emotesByName and len(value) == 1:
+			emotes = [] #set()
 			#print 'tag: '+value[0]
 			if value[0][1:] not in BANNED_TAGS:
 				if value[0] not in emotesByPony:
-					emotesByPony[value[0]]=emotes
+					emotesByPony[value[0]] = emotes
 				else:
-					emotes=emotesByPony[value[0]]
-				emotes.add(key)
+					emotes = emotesByPony[value[0]]
+				emotes.append(key) #.add
+			emotes.sort()
 for key in list(emotesByPony.keys()):
-	if len(emotesByPony[key])<MIN_LENGTH:
+	if len(emotesByPony[key]) < MIN_LENGTH:
 		del emotesByPony[key]
-	#pprint(emotesByPony)
+		continue
+
+#pprint(emotesByPony) # This is the only one of the 3 structures that is anywhere reasonable to output
+#pprint(emotesByName)
+#pprint(emoteMetadata)
 
 #
 def getProceduralPony(seed):
@@ -95,15 +102,13 @@ def getEmote(emoteName):
 	print(('emotename: '+emoteName))
 	pprint(data)
 	print(url)
-	if 'http:' not in url:
-		url='http:'+url
+	if 'http:' not in url: # let's hope no one bugs this out with a URL of gopher://fuckhttp:6969/~yourmom.png
+		url = 'http:'+url
 	imgloc = cacher.getUrlFile(url)
 	fullImage = Image.open(imgloc).convert('RGBA')
-	#urllib.urlretrieve(url,'temp.png')
-	#fullImage=Image.open("temp.png").convert('RGBA')
 	print(offset)
 	print(size)
-	fullImage = fullImage.crop((offset[0],offset[1],offset[0]+size[0],offset[1]+size[1]))
+	fullImage = fullImage.crop((offset[0], offset[1], offset[0]+size[0], offset[1]+size[1]))
 	if emoteName in emoteMetadata:
 		data = emoteMetadata[emoteName]
 		if 'right' in data:
@@ -111,25 +116,33 @@ def getEmote(emoteName):
 			fullImage = fullImage.transpose(Image.FLIP_LEFT_RIGHT)
 	return fullImage
 
+
 #
-def getRandomEmote(seed, pony=None):
-	global defaultSeed
-	if len(seed) < 1:
-		seed = defaultSeed
-	if pony is None:
-		pony = random.choice(list(emotesByPony.keys()))
-	print(pony)
-	emote = None
+def getRandomEmoteByPony(pony, seed=None):
+	if seed is not None:
+		random.seed(seed)
 	emoteNames = list(emotesByPony[pony])
-	#while emote is None and len(emoteNames)>0:
 	print(('randomly choosing emote from list of '+str(len(emoteNames))+" with seed "+str(seed)))
 	random.seed(seed)
 	emoteName = random.choice(emoteNames)
 	print(('selected emote: '+emoteName))
-	random.seed(seed)
-	emote = getEmote(emoteName)
-		#emoteNames.remove(emote)
-	return emote
+	return getEmote(emoteName)
+
+#
+def getRandomEmote(seed, pony=None):
+	# set seed for consistency
+	global defaultSeed
+	if seed is None or len(seed) < 1:
+		print("Using default seed")
+		seed = defaultSeed
+	random.seed(seed+defaultSeed)
+
+	if pony is None:
+		print("Picking from an empty pony")
+		pony = random.choice(list(emotesByPony.keys()))
+	print(pony)
+
+	return getRandomEmoteByPony(pony, seed+defaultSeed)
 
 # Increment is a parameter used to make sure this does not loop indefinitely
 def select_horse(nickname, ponylist, unique=False, increment=1):
