@@ -136,6 +136,7 @@ def getTitle(specifiedTitle=None, seed=None):
 		seed = defaultseed
 	random.seed(seed)
 	title = None
+	print('getting title, lines are: '+str(lines))
 	if len(lines) == 0:
 		line = ""
 	else:
@@ -154,13 +155,14 @@ def getTitle(specifiedTitle=None, seed=None):
 
 # Makes the title panel
 def createTitlePanel(panelSize, castlist, specifiedTitle=None):
-	title = getTitle(
+	global comic_title
+	comic_title = getTitle(
 		specifiedTitle,
 		"+".join(list(castlist.keys())) + ':'.join(list(castlist.values()))
 		)
 	img = Image.new("RGBA", panelSize, (255,255,255)) # white background
 	d = ImageDraw.Draw(img)
-	newh = utilFunctions.drawCenteredText(25, title, d, fntLarge, panelSize)
+	newh = utilFunctions.drawCenteredText(25, comic_title, d, fntLarge, panelSize)
 	newh += 17
 	spacing = 15
 	d.text(
@@ -589,6 +591,7 @@ def processChatLog(file, specifiedBackground=None, specifiedTitle=None, debugpri
 
 
 def main():
+	global comic_title
 	print("Main method")
 	chatfile = None
 	if textFileChat is None:
@@ -608,8 +611,8 @@ def main():
 		pyperclip.copy(image['link'])
 		print((image['link']))
 		if uploadReddit:
-			thetitle = getTitle()
-			print(('title ' + thetitle + " link " + image['link']))
+			thetitle = comic_title
+			print('title ' + thetitle + " link " + image['link'])
 			reddit.subreddit("beniscity").submit(title=thetitle, url=image['link'])
 	if repeatMode:
 		print('press any key to continue')
