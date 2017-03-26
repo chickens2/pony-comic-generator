@@ -61,6 +61,7 @@ allowDuplicates = config.get('Options','allow_duplicates').upper()=='TRUE'
 rainbowCast = config.get('Options','rainbow_cast').upper()=='TRUE'
 debugprint = config.get('Options','terminal_debug').upper()=='TRUE'
 removebot = config.get('Options','remove_bot_commands').upper()=='TRUE'
+ignored_users = config.get('Ignore', 'ignored_nicks').split()
 defaultseed = config.get('Options','default_seed')
 
 
@@ -347,7 +348,7 @@ def selectBackground(seed, specifiedBackground=None):
 # namelist is an output variable
 # returns the number largest number of lines in a row a single nick says
 def processLines(file, namelist):
-	ignored_users = config.get('Ignore', 'ignored_nicks').split()
+	
 	lines = []
 	for line in file:
 		newline = utilFunctions.cleanupline(
