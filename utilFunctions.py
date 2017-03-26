@@ -11,6 +11,7 @@ import textwrap
 import math
 from pprint import pprint
 from PIL import Image
+import re
 
 # Something about finding if first and last are in that order in s?
 def findBetween(s, first, last):
@@ -278,7 +279,7 @@ def uniqueSumOfPowersList(number, base):
 		complist.append(component*components[component])
 	return complist
 
-# check for joined/quit messaegs and remove them
+# check for joined/quit messages and remove them
 def quitline(line):
 	quitmessage = [
 		'(Quit:',
@@ -359,6 +360,78 @@ def rollColor(avgR, avgG, avgB, darkness):
 		triangularInt(0, 256, avgB),
 		triangularInt(0, 256, darkness)
 		)
+
+
+# Recursively searches through lines of text to
+# remove any words found in nameList.keys() and replace
+# them with the corresponding value
+def anonWord(wordIn, nameList, joiner='', recheck=True, debugprint=False):
+	masterNameList = {}
+	if debugprint is True:
+		print(('considering: '+wordIn))
+
+	# Don't bother if the word is too short
+	if len(wordIn) < 4:
+		return wordIn
+
+	if recheck is False:
+		if nameList.get(wordIn.lower(), None) is not None:
+			print(("removing a name " + wordIn))
+			return nameList[wordIn.lower()][1:] # [1:] to get rid of the + in dialogue
+		return wordIn
+
+	if joiner != '': # special case for how to parse space-delimited words
+		print(("Splitting into words delimited by \'"+joiner+"\'"))
+		parts = wordIn.split(joiner)
+		recheck = True
+	else:
+		parts = re.findall(r"\w+|[^\w\s]", wordIn, re.UNICODE)
+		recheck = False
+	newparts = []
+	for part in parts:
+		newparts.append(anonWord(part, nameList, recheck=recheck))
+	return joiner.join(newparts)
+
+
+
+# Takes a line and spits out a dict of the nick, message, and whether or not it's a /me command
+def cleanupline(linein, namelist, ignored_users=[], params={'bot':False,'debug':False}):
+	# Skip Raribot commands
+	if params['bot'] is True and '> ~' in linein:
+		return None
+
+	# Cleanup the line
+	linein = linein.strip()
+	linein = linein.strip('\n')
+	if params['debug'] is True:
+		print(('line: '+linein))
+	isme = False
+
+	# Process /me commands
+	if linein[:2] == "* " and quitline(linein) is False:
+		isme = True
+
+		# This could go into another function elsewhere if the display of /me command lines is changed
+		linein = linein[2:]
+		linein = '<' + linein[:linein.index(' ')] + '> *' + linein[linein.index(' ')+1:] + '*'
+		if params['debug'] is True:
+			print(('new /me linein '+linein))
+
+	# Throw out malformed lineins
+	if linein.count('<')<1 or linein.count('>')<1:
+		print("Found malformed line!")
+		return None
+
+	# Determine the nick
+	name = findBetween(linein, '<', '>').lower()
+	if name not in namelist:
+		namelist.append(name)
+
+	if name.lower() in ignored_users:
+		print(("Skipping ignored user "+name))
+		return None
+
+	return {"name":name, "text":linein[linein.index('>')+2:], "meline":isme}
 
 
 

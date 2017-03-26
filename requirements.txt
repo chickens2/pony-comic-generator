@@ -3,6 +3,7 @@ pyperclip
 imgurpython
 python-resize-image
 praw
+bs4
 lxml
 request
 

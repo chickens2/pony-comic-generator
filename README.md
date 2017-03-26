@@ -1,6 +1,6 @@
 This is a program for generating comics from chat text, inspired by Microsoft Comic Chat and [Jerkcity](https://www.jerkcity.com).
 
-##Installation
+## Installation
 
 1. Install Python 3.6 or newer.
 2. Install dependencies (listed in `requirements.txt`). 
@@ -11,7 +11,7 @@ N.B. If typing `python` or `pip` in the command line gives an error even after i
 
 
 
-##Usage
+## Usage
 
 1. Copy IRC text. Lines should be formatted like `<Username> Comments are here` or `* Username does a thing`
 2. Run `generateComic.py`
