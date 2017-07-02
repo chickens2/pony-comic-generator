@@ -613,7 +613,7 @@ def main():
 		if uploadReddit:
 			thetitle = comic_title
 			print('title ' + thetitle + " link " + image['link'])
-			reddit.subreddit("beniscity").submit(title=thetitle, url=image['link'])
+			print('submission result:'+str(reddit.subreddit("beniscity").submit(title=thetitle, url=image['link'])))
 	if repeatMode:
 		print('press any key to continue')
 		g=getch()()
