@@ -33,6 +33,7 @@ config.readfp(open('config.cfg'))
 
 fnt = ImageFont.truetype(config.get('Fonts','talk_font'), config.getint('Fonts','talk_size'))
 lineHeight = config.getint('Fonts','talk_height')
+print('generatepanel lineheight is :'+str(lineHeight))
 fontPixelWidth = config.getint('Fonts','talk_charwidth')
 closeupMultiplier = config.getfloat('Options','closeup_zoom')
 
@@ -150,7 +151,9 @@ def getCharacterImage(name1, dialog1, transpose, imMaxLength, imheight=None):
 	global countereiorg
 	im = None
 	im = findEmote.getRandomEmote(dialog1, name1)
-	im = resizeimage.resize_contain(im, [int(imMaxLength), imheight])
+	print('generatepanel getcharacterimage image size:'+str(im.size))
+	im = im.resize((int(im.size[0]*imheight/(1.0*im.size[1])),imheight))#resizeimage.resize_contain(im, [int(imMaxLength), imheight])
+	print('generatepanel getcharacterimage image new size:'+str(im.size))
 	if transpose:
 		im = im.transpose(Image.FLIP_LEFT_RIGHT)
 	return im
@@ -248,7 +251,7 @@ def draw2CharactersAndBackground(name1, name2, dialog1, dialog2, backgroundName,
 	#print 'char image '
 	#im.show()
 	#raw_input("paused")
-
+	print('draw2charactersandbackground info closeup:'+str(closeup)+' imsize:'+str(im.size[1]))
 	posx = padding
 	posy = panelSize[1] - im.size[1]
 	if closeup:
@@ -272,6 +275,7 @@ def draw1CharacterAndBackground(name1, dialog1, backgroundName, closeup=True):
 	if closeup:
 		heightUsed = charHeightCloseup#charHeight
 	im = getCharacterImage(name1, dialog1, True, panelSize[0]//2, heightUsed)
+	print('draw1characterandbackground info name1:'+name1+' closeup:'+str(closeup)+' imsize:'+str(im.size[1])+' loc:'+str(panelSize[1]-im.size[1])+' panelsize:'+str(panelSize[1]))
 	posx = panelSize[0]//2 - im.size[0]//2 # use // to ensure integer division
 	posy = panelSize[1]-im.size[1]
 	#if closeup:

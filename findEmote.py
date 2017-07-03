@@ -89,6 +89,7 @@ def getProceduralEmote(seed1, seed2):
 
 #
 def getEmote(emoteName):
+	print('findEmote.py getting emote '+emoteName)
 	data = emotesByName[emoteName]
 	url = data['Emotes']['']['Image']
 	offset = [0,0]
@@ -105,9 +106,10 @@ def getEmote(emoteName):
 	if 'http:' not in url: # let's hope no one bugs this out with a URL of gopher://fuckhttp:6969/~yourmom.png
 		url = 'http:'+url
 	imgloc = cacher.getUrlFile(url)
+	print('image location:'+imgloc)
 	fullImage = Image.open(imgloc).convert('RGBA')
 	print(offset)
-	print(size)
+	print('image size:'+str(size))
 	fullImage = fullImage.crop((offset[0], offset[1], offset[0]+size[0], offset[1]+size[1]))
 	if emoteName in emoteMetadata:
 		data = emoteMetadata[emoteName]
