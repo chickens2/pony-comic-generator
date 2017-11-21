@@ -1,3 +1,3 @@
 Generally any contributions will be accepted by default as long as they do not make changes to default functionality (ie. a change that adds functionality through a config option or command line argument).
 
-To test your code for changes to the default, run testSystem/createTestResults.py to verify that it generates essentially the same comics from the same logs given a default configuration. If one or more tests are not successful, you can make a case for why the specific changes that caused them to fail should be implemented.
+To test your code for changes to the default, run testSystem/createTestResults.py (from within the testSystem directory) to verify that it generates essentially the same comics from the same logs given a default configuration. If one or more tests are not successful, you can make a case for why the specific changes that caused them to fail should be implemented.
